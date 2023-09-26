@@ -10,13 +10,13 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { log } from 'console';
 import { fetchUserByUsername } from '@/services/api';
-
 const BASE_URL = 'http://localhost:8080';
-export default function UserLogin() {
+
+export default function AdminLogin() {
   const initialFormData = {
     username: '',
     password: '',
-    loginType: '',
+    loginType:'',
   };
   const [formData, setFormData] = useState(initialFormData);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -32,86 +32,68 @@ export default function UserLogin() {
     setFormData({ ...formData, [name]: value });
   };
   const handleSuccessfulLogin = (token: string, username: string) => {
-    const decodedToken: { userId: number, name:string,username: string, sub: string, iss: number, exp: number, roles: string[] } = jwt_decode(token || '');
+    const decodedToken: {userId:number,name:string,username:string, sub: string, iss: number, exp: number,roles:string[]} = jwt_decode(token||'');
     sessionStorage.setItem('user_id', decodedToken.userId.toString());
-    sessionStorage.setItem('roles', decodedToken.roles[0]);
+    sessionStorage.setItem('roles',decodedToken.roles[0]);
     sessionStorage.setItem('token', token);
     sessionStorage.setItem('username', username);
     sessionStorage.setItem('name', decodedToken.name);
     setIsAuthenticated(!!token);
     navigate('/');
     // Decode the JWT token to access the username
-    //const decodedToken: {username:string, sub: string, iss: number, exp: number,roles:string[]} = jwt_decode(token||'');
-
+    
     // const username = decodedToken.sub;
-
     // axios.get(`${BASE_URL}/users/${username}`, //AUTH
     //   {
-    //     headers: {
+    //     headers:{
     //       'Content-Type': 'application/json',
     //       'Authorization': `Bearer ${token}`
-
     //     },
     //   }
-    // ).then((response) => {
-    //   console.log("logged in:", response.data);
-    //   sessionStorage.setItem('user_id', response.data.id);
-    // }).catch((error) => {
-    //   console.log("error: ", error);
-    // })
-
-    // (async () => {
-    //   try {
-    //     const User = await fetchUserByUsername(username);
-    //     sessionStorage.setItem('user_id', User.id);
-    //     console.log("User:", User);
-    //   } catch (error) {
-    //     console.log(error);
-    //   }
-    // })();
-
-    // Navigate to the '/movies' route
-
+    //   ).then((response)=>{
+    //     console.log("logged in:",response.data);
+    //     sessionStorage.setItem('user_id', response.data.id);
+    //   }).catch((error)=>{
+    //     console.log("error: ",error);
+    //   })
   };
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    axios.post(`${BASE_URL}/auth/UserLogin`, { //判斷是否空值
+    axios.post(`${BASE_URL}/auth/AdminLogin`, { //判斷是否空值
       username: `${formData.username}`,
       password: `${formData.password}`,
-      loginType: 'ROLE_USER',
+      loginType: 'ROLE_ADMIN',
     })
       .then(async (response) => {
-        //console.log("Inside axios response");
         console.log(response);
         if (response.status === 200) {
-          alert('登入成功'); // dialog
-          // console.log("Login successfull");
+          alert('登入成功');
+          console.log("Login successfull");
           // Assuming the backend returns a JWT token
           const token = response.data.token;
-          // console.log("token: ", token);
+          console.log("token: ", token);
           handleSuccessfulLogin(token, formData.username);
         }
       })
       .catch(error => {
+        console.log(error);
         if (error.response.status === 401) {
+          alert(error.response.data);
           console.log('Invalid email or password');
           //navigate('/accessdenied');
         } else {
+          alert(error.response.data);
           console.log('An error occurred while logging in');
         }
-        alert(`登入失敗`);
       });
   };
   // useEffect(() => {
   //   if (isAuthenticated) {
   //     // User is already authenticated, redirect to '/movies'
-  //     navigate('/Booking');
+  //     //alert('您已經登入');
+  //     navigate('/');
   //   }
   // }, [isAuthenticated, navigate]);
-  // Function to handle navigation to the registration page
-  const handleRegisterClick = () => {
-    navigate('/Member/Signup'); // Change '/registration' to the actual registration page path
-  };
 
   return (
     <Container component="main" maxWidth="xs">
@@ -125,7 +107,7 @@ export default function UserLogin() {
         }}
       >
         <Typography component="h1" variant="h5">
-          用戶登入
+          管理員登入
         </Typography>
         <Box component="form" noValidate sx={{ mt: 3 }} onSubmit={handleSubmit}>
           <TextField
@@ -134,7 +116,7 @@ export default function UserLogin() {
             required
             fullWidth
             id="username"
-            label="Username (Email)"
+            label="Username"
             name="username"
             autoComplete="username"
             autoFocus
@@ -154,41 +136,13 @@ export default function UserLogin() {
             value={formData.password}
             onChange={handleChange}
           />
-     
           <Button
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 ,  backgroundColor: '#930059',
-            color: '#fff',
-            '&:hover': {
-              backgroundColor: '#ff007f', // Change color on hover
-            },
-            '&:active': {
-              backgroundColor: '#5c0033', // Change color when clicked
-            },}}
+            sx={{ mt: 3, mb: 2 }}
           >
-           登 入
-          </Button>
-          <Typography component="h6" variant="h5" marginTop={3}/>
-         還沒有會員嗎? 
-          {/* Registration button */}
-          <Button
-            fullWidth
-            variant="outlined"
-            sx={{ mt: 2, mb: 2 ,  backgroundColor: '#930059',
-            color: '#fff',
-            '&:hover': {
-              backgroundColor: '#ff007f', // Change color on hover
-            },
-            '&:active': {
-              backgroundColor: '#5c0033', // Change color when clicked
-            },
-          }}
-            onClick={handleRegisterClick}
-
-          >
-            註冊會員
+            Sign In
           </Button>
         </Box>
       </Box>

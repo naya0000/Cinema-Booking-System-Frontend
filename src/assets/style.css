@@ -1,0 +1,15 @@
+.horizontal-seat {
+  display: flex;
+  flex-direction: row; /* 水平排列 */
+  align-items: center; /* 垂直居中对齐 */
+}
+
+.seat-number {
+  /* margin-right: 10px;  */
+  /* 座位号右侧留出一些间距 */
+}
+
+.is-available {
+  /* margin-left: 10px;  */
+  /* 是否可用左侧留出一些间距 */
+}

@@ -1,14 +1,17 @@
 import MovieSearch from '@/components/MovieSearch'
 import { fetchMovies } from '@/services/api'
-import { Card, CardContent, CardMedia, Theme, Typography } from '@mui/material'
+import { Button, ButtonGroup, Card, CardContent, CardMedia, Theme, Typography } from '@mui/material'
 import Box from '@mui/material/Box'
 import Container from '@mui/material/Container'
 import CssBaseline from '@mui/material/CssBaseline'
 import Grid from '@mui/material/Grid'
-import { createTheme, ThemeProvider } from '@mui/material/styles'
+import {
+  createTheme, ThemeProvider, alpha,
+  getContrastRatio
+} from '@mui/material/styles'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-
+import { lime, purple } from '@mui/material/colors';
 interface Movie {
   id: number;
   title: string;
@@ -22,13 +25,59 @@ interface Movie {
   // sessions: Session[];
   // orders: CustomerOrder[];
 }
-const theme = createTheme()
+// const theme = createTheme({
+//   palette: {
+//     primary:  {
+//       main: '#FF5733',
+//       //light: will be calculated from palette.primary.main,
+//       // dark: will be calculated from palette.primary.main,
+//       // contrastText: will be calculated to contrast with palette.primary.main
+//     },
+//     secondary: {
+//       main: '#E0C2FF',
+//       light: '#F5EBFF',
+//       // dark: will be calculated from palette.secondary.main,
+//       contrastText: '#47008F',
+//     },
+//   },
+// });
+// Augment the palette to include a violet color
+declare module '@mui/material/styles' {
+  interface Palette {
+    violet: Palette['primary'];
+  }
 
+  interface PaletteOptions {
+    violet?: PaletteOptions['primary'];
+  }
+}
+
+// Update the Button's color options to include a violet option
+declare module '@mui/material/Button' {
+  interface ButtonPropsColorOverrides {
+    violet: true;
+  }
+}
+
+const violetBase = '#7F00FF';
+const violetMain = alpha(violetBase, 0.7);
+
+const theme = createTheme({
+  palette: {
+    violet: {
+      main: violetMain,
+      light: alpha(violetBase, 0.5),
+      dark: alpha(violetBase, 0.9),
+      contrastText: getContrastRatio(violetMain, '#fff') > 4.5 ? '#fff' : '#111',
+    },
+  },
+});
 function HomePage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Released');
+  const token = sessionStorage.getItem('token');//get item from session should be implemented inside the export function
 
   useEffect(() => {
     (async () => {
@@ -42,7 +91,7 @@ function HomePage() {
   }, []);
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query); 
+    setSearchQuery(query);
     const filtered: Movie[] = movies.filter((movie) =>
       movie.title.toLowerCase().includes(query.toLowerCase())
     );
@@ -51,8 +100,8 @@ function HomePage() {
   // Conditionally choose movies to display based on the search query
   const moviesToDisplay = searchQuery.trim() === '' ? movies : filteredMovies;
   const filteredByCategory = selectedCategory === 'Released'
-  ? moviesToDisplay.filter((movie) => movie.status === 'RELEASED')
-  : moviesToDisplay.filter((movie) => movie.status === 'UPCOMING');
+    ? moviesToDisplay.filter((movie) => movie.status === 'RELEASED')
+    : moviesToDisplay.filter((movie) => movie.status === 'UPCOMING');
 
   return (
     <ThemeProvider theme={theme}>
@@ -68,18 +117,36 @@ function HomePage() {
             alignItems: 'center',
           }}
         >
-          {/* <Typography variant="h4" component="h1" gutterBottom>
-            熱映中
-          </Typography> */}
-          <div>
+
+          {/* <div>
             <button onClick={() => setSelectedCategory('Released')}>熱映中</button>
             <button onClick={() => setSelectedCategory('Upcoming')}>即將上映</button>
+          </div> */}
+          <div>
+            <ButtonGroup sx={{mb: 2}}>
+              <Button 
+                variant={selectedCategory === 'Released' ? 'contained' : 'outlined'}
+                color="violet"
+                onClick={() => setSelectedCategory('Released')}
+                
+              >
+                熱映中
+              </Button>
+              <Button
+                variant={selectedCategory === 'Upcoming' ? 'contained' : 'outlined'}
+                color="violet"
+                onClick={() => setSelectedCategory('Upcoming')}
+              >
+                即將上映
+              </Button>
+            </ButtonGroup>
           </div>
-        <Grid container spacing={2}>
-          {filteredByCategory
-          .map((movie) => (
-            <Grid item key={movie.id} xs={8} sm={4} md={3}>
-              <Card sx={{
+
+          <Grid container spacing={2}>
+            {filteredByCategory
+              .map((movie) => (
+                <Grid item key={movie.id} xs={8} sm={4} md={3}>
+                  <Card sx={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'stretch', // Stretch cards to equal height
@@ -108,9 +175,9 @@ function HomePage() {
                       </Typography>
                     </CardContent>
                   </Card>
-            </Grid>
-          ))}
-        </Grid>
+                </Grid>
+              ))}
+          </Grid>
         </Box>
       </Container>
     </ThemeProvider>

@@ -27,15 +27,18 @@ interface Order {
   movie: string;
   startTime: string;
   sessionDate: string;
-  user: number;
+  username: string;
   seatsNumber: string[];
+  seatsRow: string[];
   totalAmount: number;
   canceled: string;
+  status: string;
 }
 
 export default function OrderDetail() {
   const api = 'http://localhost:8080';
   const user_id = sessionStorage.getItem('user_id') || '';
+  const token = sessionStorage.getItem('token') || '';
   const [ordersData, setOrdersData] = useState<Order[]>([]);
   const navigate = useNavigate();
   const userId = parseInt(user_id);
@@ -52,9 +55,10 @@ export default function OrderDetail() {
         }
       })();
     }
-  }, [userId]);
-  const handleCancelOrder = (orderId: number, order:Order) => {
-    navigate(`/Order/Cancel/${orderId}`, { state: {orderData: order} });
+  }, [userId, token]);
+
+  const handleCancelOrder = (orderId: number, order: Order) => {
+    navigate(`/Order/Cancel/${orderId}`, { state: { orderData: order } });
   }
 
 
@@ -80,6 +84,7 @@ export default function OrderDetail() {
                 <TableCell>場次時間</TableCell>
                 <TableCell>票種</TableCell>
                 <TableCell>總金額</TableCell>
+                <TableCell>狀態</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -90,15 +95,25 @@ export default function OrderDetail() {
                   <TableCell>{order.orderDate}</TableCell>
                   <TableCell>{order.payment}</TableCell>
                   <TableCell>{order.quantity}</TableCell>
-                  <TableCell>{order.seatsNumber.join(', ')}</TableCell>
+                  {/* <TableCell>{order.seatsNumber.join(', ')}</TableCell>
+                  <TableCell>{order.seatsRow.join(', ')}</TableCell> */}
+                  <TableCell>
+                    {order.seatsNumber.map((number, index) => {
+                      const row = order.seatsRow[index]; // Get the corresponding row
+                      return `${row}${number}`;
+                    }).join(', ')}
+                  </TableCell>
                   <TableCell>{order.sessionDate}</TableCell>
                   <TableCell>{order.startTime}</TableCell>
                   <TableCell>{order.ticket}</TableCell>
                   <TableCell>{order.totalAmount}</TableCell>
+                  <TableCell>{order.status}</TableCell>
                   <TableCell>
-                    {order.canceled === 'Y' ?
-                      '已取消':
-                      <button onClick={() => handleCancelOrder(order.id, order)}>取消訂單</button>
+                    {order.canceled === 'Y' && order.status === '已取消'
+                      ? '已確認取消訂單'
+                      : order.canceled === 'Y' && order.status === '處理中'
+                        ? '已申請取消訂單'
+                        : <button onClick={() => handleCancelOrder(order.id, order)}>取消訂單</button>
                     }
                   </TableCell>
                 </TableRow>

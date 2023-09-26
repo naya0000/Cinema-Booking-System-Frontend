@@ -10,7 +10,7 @@ interface Props{
 }
 export default function TicketSelect({ onChange }: Props) {
   const [ticket, setTicket] = React.useState('');
-  const tickets: string[] = ['Regular_Ticket','Concession_Ticket'];
+  const tickets: string[] = ['全票','優待票'];
 
   const handleChange = (event: SelectChangeEvent) => {
     setTicket(event.target.value);

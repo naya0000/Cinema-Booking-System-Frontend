@@ -12,18 +12,25 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const pages = ['線上訂票', '會員中心'];
-const settings = ['Login', 'Account', 'Logout'];
+const adminPages = ['訂單管理', '會員管理', '電影管理'];
+const settings = ['Login', 'Account', 'Logout', 'Signup'];
 
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const token = sessionStorage.getItem('token');
-
+  const role = sessionStorage.getItem('roles');
+  const username = sessionStorage.getItem('username');
+  const name = sessionStorage.getItem('name');
+  // Use the useLocation hook to get the current page URL
+  const location = useLocation();
+  
   useEffect(() => {
     setIsAuthenticated(!!token);
   }, [token]);
@@ -42,21 +49,39 @@ function ResponsiveAppBar() {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
-  function renderSwitch(page: string){
+  function renderSwitch(page: string) {
     switch (page) {
       case '線上訂票':
         return "/cinemas/Booking";
       case '會員中心':
         return '/cinemas/Member'; // Replace with the actual route path for Pricing
-      case 'Blog':
-        return '/blog'; // Replace with the actual route path for Blog
+      case '訂單管理':
+        return "/cinemas/Admin/Orders";
+      case '電影管理':
+        return "/cinemas/Admin/Movies";
+      case '會員管理':
+        return "/cinemas/Admin/Users";
       default:
         return '/'; // Default route path
     }
   }
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: '#f288a8' }}> {/* Set background color to red */}
+    <React.Fragment>
+    <AppBar
+      // position="static"
+      position="fixed" // Set the position to "fixed"
+      sx={{
+        backgroundColor:
+          role === 'ROLE_ADMIN' || location.pathname === '/Admin/Login' // Check if on Admin/Login page
+            ? 'blue'
+            : '#f288a8',
+        
+      }}
+      style={{ top: 0 }} // Keep the AppBar at the top
+      
+    > <Toolbar>
+    {/* Set background color to red */}
       <Container maxWidth="xl">
         <Toolbar disableGutters >
           <AdbIcon sx={{ display: { xs: 'none', md: 'flex', color: '#f8b7ca' }, mr: 1 }} />
@@ -107,19 +132,6 @@ function ResponsiveAppBar() {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-               {/* {pages.map((page) => (
-               <Link to="/Booking" style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <MenuItem>
-                    <Typography textAlign="center">{}</Typography>
-                  </MenuItem>
-                </Link>
-               ))} */}
-
-              {/* {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu} >
-                  <Typography textAlign="center" >{page}</Typography>
-                </MenuItem>
-              ))} */}
             </Menu>
           </Box>
           <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
@@ -139,22 +151,110 @@ function ResponsiveAppBar() {
               textDecoration: 'none',
             }}
           >
-             MIRAMAR
+            MIRAMAR
           </Typography>
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                component="a"
-                href={renderSwitch(page)}
-                sx={{ my: 2, color: '#930059', display: 'inherit' }}//Pages text color
-              >
-                {page}
-              </Button>
-            ))}
-          </Box>
 
+          {/* {role === 'ROLE_ADMIN' ? (
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+              {adminPages.map((page) => (
+                <Button
+                  key={page}
+                  onClick={handleCloseNavMenu}
+                  component="a"
+                  href={renderSwitch(page)}
+                  sx={{ my: 2, color: '#930059', display: 'inherit' }}
+                >
+                  {page}
+                </Button>
+              ))}
+            </Box>
+          ) : (
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+              {pages.map((page) => (
+                <Button
+                  key={page}
+                  onClick={handleCloseNavMenu}
+                  component="a"
+                  href={renderSwitch(page)}
+                  sx={{ my: 2, color: '#930059', display: 'inherit' }}
+                >
+                  {page}
+                </Button>
+              ))}
+            </Box>
+          )} */}
+          {isAuthenticated ? (
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+              {role === 'ROLE_ADMIN' ? (
+                adminPages.map((page) => (
+                  <Button
+                    key={page}
+                    onClick={handleCloseNavMenu}
+                    component="a"
+                    href={renderSwitch(page)}
+                    sx={{
+                      my: 2,
+                      color: 'white',
+                      display: 'inherit',
+                      
+                    }}
+                  >
+                    {page}
+                  </Button>
+                ))
+              ) : (
+                pages.map((page) => (
+                  <Button
+                    key={page}
+                    onClick={handleCloseNavMenu}
+                    component="a"
+                    href={renderSwitch(page)}
+                    sx={{
+                      my: 2,
+                      color:
+                        location.pathname === '/Admin/Login' // Check if on Admin/Login page
+                          ? 'blue'
+                          : 'white',
+                      display: 'inherit'
+                    }}
+                  >
+                    {page}
+                  </Button>
+                ))
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+              {
+                pages.map((page) => (
+                  <Button
+                    key={page}
+                    onClick={handleCloseNavMenu}
+                    component="a"
+                    href={renderSwitch(page)} sx={{
+                      my: 2,
+                      color:
+                        location.pathname === '/Admin/Login' // Check if on Admin/Login page
+                          ? 'white'
+                          : '#930059',
+                      display: 'inherit',
+                      
+                      
+                    }}
+                    //sx={{ my: 2, color: '#930059', display: 'inherit' }}
+                  >
+                    {page}
+                  </Button>
+                ))
+              }
+            </Box>
+          )}
+           {isAuthenticated ? (
+          <Typography textAlign="center" marginRight={3}>{name}，歡迎!</Typography>):(
+            <Link to="/Member/Signup" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Typography textAlign="center" marginRight={3}>歡迎加入美麗華影城會員</Typography>
+            </Link>
+          )}
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
@@ -178,24 +278,44 @@ function ResponsiveAppBar() {
               onClose={handleCloseUserMenu}
             >
               {isAuthenticated ? (
-                [
-                  <Link to="/Member" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <MenuItem>
-                      <Typography textAlign="center">Account</Typography>
-                    </MenuItem>
-                  </Link>,
-                  <Link to="/Member/logout" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <MenuItem >
-                      <Typography textAlign="center">Logout</Typography>
-                    </MenuItem>
-                  </Link>,
+                [ 
+                  role === 'ROLE_ADMIN' ? ([
+                    <Link to="/Logout" style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <MenuItem>
+                        <Typography textAlign="center">登出會員</Typography>
+                      </MenuItem>
+                    </Link>]
+                  ) : ([
+                   
+                    <Link to="/Member" style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <MenuItem>
+                        <Typography textAlign="center">會員中心</Typography>
+                      </MenuItem>
+                    </Link>,
+                    <Link to="/Logout" style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <MenuItem >
+                        <Typography textAlign="center">登出會員</Typography>
+                      </MenuItem>
+                    </Link>,])
                 ] //add key in list
               ) : (
-                <Link to="/Member/login" style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <MenuItem>
-                    <Typography textAlign="center">Login</Typography>
-                  </MenuItem>
-                </Link>
+                [
+                  <Link to="/Member/Login" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <MenuItem>
+                      <Typography textAlign="center">會員登入</Typography>
+                    </MenuItem>
+                  </Link>,
+                  <Link to="/Member/Signup" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <MenuItem>
+                      <Typography textAlign="center">加入會員</Typography>
+                    </MenuItem>
+                  </Link>,
+                  <Link to="/Admin/Login" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <MenuItem>
+                      <Typography textAlign="center">後台管理</Typography>
+                    </MenuItem>
+                  </Link>
+                ]
               )}
               {/* {settings.map((setting) => (
                 <Link to={`/${setting.toLowerCase()}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -208,7 +328,10 @@ function ResponsiveAppBar() {
           </Box>
         </Toolbar>
       </Container>
+      </Toolbar>
     </AppBar>
+     <Toolbar/>
+     </React.Fragment>
   );
 }
 export default ResponsiveAppBar;

@@ -10,7 +10,7 @@ interface Props{
 }
 export default function PaymentSelect({ onChange }: Props) {
   const [payment, setPayment] = React.useState('');
-  const payments: string[] = ['CREDIT_CARD','CASH','LINE_PAY'];
+  const payments: string[] = ['信用卡','現金','LINE_PAY'];
 
   const handleChange = (event: SelectChangeEvent) => {
     setPayment(event.target.value);

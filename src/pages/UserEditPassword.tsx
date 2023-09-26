@@ -10,24 +10,23 @@ import { useNavigate } from 'react-router-dom';
 
 const api = 'http://localhost:8080';
 const token = sessionStorage.getItem('token');
-export default function UserEdit() {
-  
-  const navigate = useNavigate();
-  const id = sessionStorage.getItem('user_id');
+export default function UserEditPassword() {
   const initialUserData = {
-    id:id,
-    name: '',
-    //username: '', 
-    password: '',
-    phoneNumber: '',
-    locked:0,
-    //status: ''
+    name:'',
+    username:'',
+    password: '', 
+    newPassword: '',
+    confirmPassword: '',
   };
-  const [userData, setUserData] = useState(initialUserData);
 
-  useEffect(() => { //get initial user data
-    if (id) {
-      axios.post(`${api}/users/id`,  //AUTH
+  const [userData, setUserData] = useState(initialUserData);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const id = sessionStorage.getItem('user_id');
+
+    if (id) { //get initial user data
+      axios.post(`${api}/users/id`, //AUTH
         `${id}`,
         {
           headers: {
@@ -40,12 +39,9 @@ export default function UserEdit() {
             const user = response.data;
             console.log("user:", user);
             setUserData({
-              id:id,
+               ...userData,
               name: user.name,
-              //username: user.username, // Add more user-related fields here
-              password: user.password,
-              phoneNumber: user.phoneNumber,
-              locked: user.locked,
+              username: user.username,
             });
           }
         })
@@ -53,7 +49,7 @@ export default function UserEdit() {
           console.error('Error fetching user data:', error);
         });
     }
-  }, [token]);
+  }, []);
 
   const handleChange = (event: { target: { name: any; value: any; }; }) => {
     const { name, value } = event.target;
@@ -64,12 +60,23 @@ export default function UserEdit() {
     event.preventDefault();
     const userId = sessionStorage.getItem('user_id');
     if (userId) {
-      axios.put(`${api}/users/id`, userData, //USER
+      // Check if newPassword and confirmPassword match
+      if (userData.newPassword !== userData.confirmPassword) {
+        alert('密碼確認錯誤');
+        return;
+      }
+       // Send a request to update the user's password
+      axios.put(`${api}/auth/password`,  { //AUTH
+        id: userId,
+        username:userData.username,
+        password: userData.password, // Current password
+        newPassword: userData.newPassword, // New password
+      },
       {
         headers: {
           'Authorization': `Bearer ${token}`
         }
-      }) 
+      })
         .then((response) => {
           if (response.status === 200) {
             console.log('User data updated successfully');
@@ -87,6 +94,12 @@ export default function UserEdit() {
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
+      <Typography component="h5" variant="h5"> 
+      姓名: {userData.name}
+      </Typography>
+      <Typography component="h5" variant="h5"> 
+      帳號: {userData.username}
+      </Typography>
       <Box
         sx={{
           marginTop: 8,
@@ -96,33 +109,22 @@ export default function UserEdit() {
         }}
       >
         <Typography component="h1" variant="h5">
-          更新會員資料
+          重設密碼
         </Typography>
         <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
-          {/* <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            id="username"
-            label="帳號"
-            name="username"
-            autoComplete="username"
-            autoFocus
-            value={userData.username}
-            onChange={handleChange}
-          /> */}
+          
           <TextField
             variant="outlined"
             margin="normal"
             required
             fullWidth
-            id="name"
-            label="姓名"
-            name="name"
-            autoComplete="name"
+            id="password"
+            label="原始密碼"
+            name="password"
+            type="password"
+            autoComplete="password"
             autoFocus
-            value={userData.name}
+            value={userData.password}
             onChange={handleChange}
           />
           <TextField
@@ -130,12 +132,27 @@ export default function UserEdit() {
             margin="normal"
             required
             fullWidth
-            id="phoneNumber"
-            label="電話"
-            name="phoneNumber"
-            autoComplete="phoneNumber"
+            id="newPassword"
+            label="新密碼"
+            name="newPassword"
+            type="password"
+            autoComplete="newPassword"
             autoFocus
-            value={userData.phoneNumber}
+            value={userData.newPassword}
+            onChange={handleChange}
+          />
+          <TextField
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            id="confirmPassword"
+            label="新密碼確認"
+            name="confirmPassword"
+            type="password"
+            autoComplete="confirmPassword"
+            autoFocus
+            value={userData.confirmPassword}
             onChange={handleChange}
           />
           {/* Add more fields for other user information */}

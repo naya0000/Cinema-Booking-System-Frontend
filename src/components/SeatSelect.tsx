@@ -24,6 +24,7 @@ const MenuProps = {
 
 interface Seat {
   id: number;
+  seatRow:string;
   seatNumber: string;
   isAvailable: number;
 }
@@ -47,8 +48,6 @@ export const SeatSelect: React.FC<Props> = ({ movieSeats, quantity, onChange }) 
     }else{
       setShowWarning(true);
     }
-    // console.log("selectedSeatObjects:",selectedSeatObjects)
-    // onChange(selectedSeatObjects);
   };
 
 
@@ -66,7 +65,7 @@ export const SeatSelect: React.FC<Props> = ({ movieSeats, quantity, onChange }) 
           renderValue={(selected) =>
             movieSeats
               .filter((seat) => selected.includes(seat.id))
-              .map((seat) => seat.seatNumber)
+              .map((seat) => `${seat.seatRow}${seat.seatNumber}`)
               .join(', ')
           }
           //renderValue={(selected) => (selected as Seat[]).join(', ')}
@@ -75,7 +74,7 @@ export const SeatSelect: React.FC<Props> = ({ movieSeats, quantity, onChange }) 
           {movieSeats.filter((movieSeat) => movieSeat.isAvailable === 1)
             .map((movieSeat) => (
               <MenuItem key={movieSeat.id} value={movieSeat.id}> {/* Use seat.id as the value */}
-                <ListItemText primary={movieSeat.seatNumber} />
+                <ListItemText primary={`${movieSeat.seatRow}${movieSeat.seatNumber}`} />
               </MenuItem>
             ))}
         </Select>

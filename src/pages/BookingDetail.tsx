@@ -3,7 +3,7 @@ import PaymentSelect from "@/components/PaymentSelect";
 import QuantitySelect from "@/components/QuantitySelect";
 import SeatSelect from "@/components/SeatSelect";
 import TicketSelect from "@/components/TicketSelect";
-import { fetchMovieById, fetchMovies } from "@/services/api";
+import { fetchMovieById, fetchMovieSeats, fetchMovies } from "@/services/api";
 import { Box, Button, Container, Grid, Typography } from "@mui/material";
 import axios from "axios";
 import { log } from "console";
@@ -12,6 +12,7 @@ import { Navigate, useNavigate, useOutletContext, useParams } from "react-router
 
 interface Seat {
   id: number;
+  seatRow: string;
   seatNumber: string;
   isAvailable: number;
 }
@@ -49,18 +50,19 @@ export default function BookingDetail() {
   const navigate = useNavigate();
   const user_id = parseInt(sessionStorage.getItem('user_id') || '');
   const { movie_id } = useParams();
-  const [isFormValid, setIsFormValid] = useState(false); 
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [seats, setSeats] = useState<Seat[]>([]);
   // Define your form fields here
   const [formData, setFormData] = useState({ //orderData
     // price: 0,
     quantity: '',
     payment: '',
     orderDate: '',
-    sessionId: 1,
+    sessionId: 0,
     movieId: movie_id,
-    userId:user_id,
-    selectedSeats: [] as number[]|string, // Example: Add a field for selected seats
-    ticket:'',
+    userId: user_id,
+    selectedSeats: [] as number[] | string, // Example: Add a field for selected seats
+    ticket: '',
   });
 
   console.log("movie_id:", movie_id);
@@ -80,7 +82,20 @@ export default function BookingDetail() {
       })();
     }
   }, [movie_id]);
-
+  useEffect(() => {
+    if (movie_id) {
+      const movieId = parseInt(movie_id);
+      (async () => {
+        try {
+          const seatsData = await fetchMovieSeats(movieId, formData.sessionId);
+          setSeats(seatsData);
+          console.log("movieId:",movieId,"formData.sessionId:",formData.sessionId," seatData:", seatsData);
+        } catch (error) {
+          console.log(error);
+        }
+      })();
+    }
+  }, [formData.sessionId]);
   useEffect(() => {
     // Calculate form validity based on the condition
     const isValid = formData.selectedSeats.length === parseInt(formData.quantity);
@@ -109,14 +124,14 @@ export default function BookingDetail() {
         id: formData.userId,
       },
       seatsId: formData.selectedSeats,
-      ticket:formData.ticket,
-      totalAmount: (formData.ticket==="Regular_Ticket" ? 100:90 ) * parseInt(formData.quantity) + 20,
+      ticket: formData.ticket,
+      totalAmount: (formData.ticket === "Regular_Ticket" ? 100 : 90) * parseInt(formData.quantity) + 20*parseInt(formData.quantity),
     };
-    console.log("totalAmount:",OrderData.totalAmount);
-     // Redirect to OrderDetail with orderData as route parameters
-    navigate(`/Booking/confirm`, { state: {orderData: OrderData} });
+    console.log("totalAmount:", OrderData.totalAmount);
+    // Redirect to OrderDetail with orderData as route parameters
+    navigate(`/Booking/confirm`, { state: { orderData: OrderData } });
   }
- 
+
   return (
     <Container style={{ maxWidth: "1600px", marginTop: 50 }}>
       <Grid container spacing={4}>
@@ -153,9 +168,9 @@ export default function BookingDetail() {
                 電影介紹:
               </Typography>
               <Typography variant="body2" color="textSecondary" >
-              {movie.description}
+                {movie.description}
               </Typography>
-             
+
             </Box>
           )}
         </Grid>
@@ -170,15 +185,15 @@ export default function BookingDetail() {
               onChange={(quantity) => setFormData({ ...formData, quantity })}
             />
             <SeatSelect
-              movieSeats={movie?.seats || []}
+              movieSeats={seats || []}
               quantity={parseInt(formData.quantity)}
               onChange={(selectedSeats) => setFormData({ ...formData, selectedSeats })}
             />
             <TicketSelect
               onChange={(ticket) => setFormData({ ...formData, ticket })}
             />
-            <Button variant="contained" type="submit" color="primary"  style={{ marginTop: "16px" }} 
-                    disabled={!isFormValid} // Disable the button if the form is not valid
+            <Button variant="contained" type="submit" color="primary" style={{ marginTop: "16px" }}
+              disabled={!isFormValid} // Disable the button if the form is not valid
             >
               Submit Order
             </Button>
@@ -186,6 +201,6 @@ export default function BookingDetail() {
         </Grid>
       </Grid>
     </Container>
-    
+
   );
 }

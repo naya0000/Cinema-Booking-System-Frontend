@@ -17,16 +17,6 @@ import PaymentSelect from '@/components/PaymentSelect';
 import { log } from 'console';
 import axios from 'axios';
 
-// Mock data for the booking inquiry
-const submitData = {
-  movie: 'Movie Title',
-  date: '2023-09-20',
-  showTime: '15:00',
-  item: 'Movie Ticket',
-  seats: ['A1', 'A2', 'A3'],
-  bookingFee: 10,
-};
-
 interface OrderData {
   //price: number;
   orderDate: string;
@@ -48,6 +38,7 @@ interface OrderData {
 }
 interface Seat {
   id: number;
+  seatRow:string;
   seatNumber: string;
   isAvailable: number;
 }
@@ -103,16 +94,15 @@ export default function OrderDetail() {
     }
   }, [anOrderData.session.id]);
 
-
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const now = new Date();
     const userId = parseInt(sessionStorage.getItem('user_id') || '');
     const orderDate = now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' });
     const canceled = 'N';
+    const status = '處理中';
     //setAnOrderData({...anOrderData,orderDate})
-    const requestData = { ...anOrderData, orderDate, canceled };
+    const requestData = { ...anOrderData, orderDate, canceled, status };
 
     console.log("requestData:", requestData);
     // create a new order
@@ -180,12 +170,12 @@ export default function OrderDetail() {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    {seats.map((seat) => seat.seatNumber).join(', ')}
+                    {seats.map((seat) =>`${seat.seatRow}${seat.seatNumber}`).join(', ')}
                   </TableCell>
                   <TableCell>${20 * anOrderData.quantity}</TableCell>
                   <TableCell >
                     {/* <Typography > */}
-                    {anOrderData?.ticket === "Regular_Ticket" ? "$100" : "$90"} * {anOrderData.quantity} + $20 =
+                    {anOrderData?.ticket === "Regular_Ticket" ? "$100" : "$90"} * {anOrderData.quantity} + $20 * {anOrderData.quantity}=
                     ${anOrderData?.totalAmount}
                     {/* </Typography> */}
                   </TableCell>
