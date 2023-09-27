@@ -75,6 +75,12 @@ export default function UserLogin() {
   };
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // Check if the username or password field is empty
+  if (!formData.username || !formData.password) {
+    alert('請填寫用戶名稱和密碼'); // Provide a meaningful error message
+    return; // Exit the function without making the axios request
+  } 
     axios.post(`${BASE_URL}/auth/UserLogin`, { //判斷是否空值
       username: `${formData.username}`,
       password: `${formData.password}`,

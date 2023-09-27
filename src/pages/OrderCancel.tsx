@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-import { updateCanceledStatus } from '@/services/api';
+import { updateCanceledStatus, updateOrderStatus } from '@/services/api';
 const containerStyle = {
   marginBottom: '20px', // Add margin at the bottom of the TableContainer
 };
@@ -49,11 +49,12 @@ export default function OrderCancel() {
   const handleCancel = async () => {
     // console.log("orderid:",orderId);
     ///orders/status/{id}
-    setAnOrderData({ ...anOrderData, canceled: 'Y' });
+    setAnOrderData({ ...anOrderData, canceled: '使用者' });
 
     try {
-      const response = await updateCanceledStatus(anOrderData.id, 'Y');
-      if (response === 200) {
+      const responseCancel = await updateCanceledStatus(anOrderData.id, '使用者');
+      const responseOrder= await updateOrderStatus(anOrderData.id, '處理中');
+      if (responseCancel === 200 && responseOrder) {
         alert('取消訂單成功');
         navigate('/Member/OrderHistory');
       }
@@ -63,7 +64,7 @@ export default function OrderCancel() {
   }
   return (
     <div>
-      <Typography variant="h6" style={{ marginTop: '1rem',marginLeft: '18px' }}>
+      <Typography variant="h6" style={{ marginTop: '3rem',marginLeft: '15px' }}>
         訂單明細:
       </Typography>
 
@@ -73,10 +74,10 @@ export default function OrderCancel() {
           訂單明細
           </TableHead> */}
           <TableBody>
-            <TableRow>
+            {/* <TableRow>
               <TableCell><strong>訂票序號:</strong></TableCell>
               <TableCell>{anOrderData.id}</TableCell>
-            </TableRow>
+            </TableRow> */}
             <TableRow>
               <TableCell><strong>訂票日期:</strong></TableCell>
               <TableCell>{anOrderData.orderDate}</TableCell>

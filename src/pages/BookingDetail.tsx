@@ -89,7 +89,7 @@ export default function BookingDetail() {
         try {
           const seatsData = await fetchMovieSeats(movieId, formData.sessionId);
           setSeats(seatsData);
-          console.log("movieId:",movieId,"formData.sessionId:",formData.sessionId," seatData:", seatsData);
+          console.log("movieId:", movieId, "formData.sessionId:", formData.sessionId, " seatData:", seatsData);
         } catch (error) {
           console.log(error);
         }
@@ -98,7 +98,7 @@ export default function BookingDetail() {
   }, [formData.sessionId]);
   useEffect(() => {
     // Calculate form validity based on the condition
-    const isValid = formData.selectedSeats.length === parseInt(formData.quantity);
+    const isValid = formData.selectedSeats.length === parseInt(formData.quantity) && formData.ticket !== '';
     setIsFormValid(isValid);
   }, [formData]);
 
@@ -125,15 +125,20 @@ export default function BookingDetail() {
       },
       seatsId: formData.selectedSeats,
       ticket: formData.ticket,
-      totalAmount: (formData.ticket === "Regular_Ticket" ? 100 : 90) * parseInt(formData.quantity) + 20*parseInt(formData.quantity),
+      totalAmount: (formData.ticket === "全票" ? 100 : 90) * parseInt(formData.quantity) + 20 * parseInt(formData.quantity),
     };
     console.log("totalAmount:", OrderData.totalAmount);
     // Redirect to OrderDetail with orderData as route parameters
     navigate(`/Booking/confirm`, { state: { orderData: OrderData } });
   }
-
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) {
+      return text;
+    }
+    return text.slice(0, maxLength) + "...";
+  };
   return (
-    <Container style={{ maxWidth: "1600px", marginTop: 50 }}>
+    <Container style={{ maxWidth: "1800px", marginTop: 50 }}>
       <Grid container spacing={4}>
         <Grid item xs={12} md={2}>
           {movie && (
@@ -142,34 +147,63 @@ export default function BookingDetail() {
                 src={movie.coverUrl}
                 alt={movie.title}
                 style={{
-                  width: "200px",
+                  width: "220px",
                   height: "auto",
                 }}
               />
             </Box>
           )}
         </Grid>
-        <Grid item xs={12} md={4} marginLeft={3}>
+        <Grid item xs={12} md={4} marginLeft={5} marginRight={4}>
           {movie && (
-            <Box>
+            <Box style={{
+              fontSize: '20px'
+              //color: 'red'
+            }}>
               <Typography variant="h5" component="h1">
                 {movie.title}
               </Typography>
-              <Typography variant="body2" color="textSecondary">
-                上映日期: {movie.releaseDate}
+              <Box
+              style={{
+                display: 'inline-block',
+                backgroundColor: `${movie.level==='普遍級'?'green':movie.level==='保護級'?'blue':movie.level==='輔導級'?'orange':'red'}`,
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                margin:'15px 0'
+              }}
+            >
+              {movie.level}
+            </Box>
+            <Typography variant="body1" sx={{color:"royalblue"}}>
+            <b>上映日期</b>
+            </Typography>
+            <Typography variant="body1" marginBottom={2}>
+              {movie.releaseDate}
+            </Typography>
+            <Typography variant="body1"  sx={{color:"royalblue"}}>
+            <b> 類型</b>
+            </Typography>
+            <Typography variant="body1" marginBottom={2}>
+              {movie.genre}
+            </Typography>
+              <Typography variant="body1"  sx={{color:"royalblue"}}>
+              <b> 電影介紹</b>
               </Typography>
-              <Typography variant="body2" color="textSecondary">
-                類型: {movie.genre}
+              <Typography variant="body2" color="textSecondary" style={{ fontSize: '16px' }}>
+                {truncateText(movie.description, 230)}
               </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {movie.level}
-              </Typography>
-              <Typography variant="body2" color="textSecondary" marginTop={1}>
-                電影介紹:
-              </Typography>
-              <Typography variant="body2" color="textSecondary" >
-                {movie.description}
-              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                style={{ margin: "18px 0" }}
+                onClick={() => {
+                  // Handle button click action here, e.g., navigate to another page
+                  navigate(`/Movie/Detail?id=${movie_id}`); // Replace '/otherPage' with the actual URL you want to navigate to
+                }}
+              >
+                更多資訊
+              </Button>
 
             </Box>
           )}

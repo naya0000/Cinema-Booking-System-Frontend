@@ -16,6 +16,7 @@ import { createOrder, fetchMovieTitleById, fetchSeatsByIds, fetchSessionTimeById
 import PaymentSelect from '@/components/PaymentSelect';
 import { log } from 'console';
 import axios from 'axios';
+import { grey, red } from '@mui/material/colors';
 
 interface OrderData {
   //price: number;
@@ -38,7 +39,7 @@ interface OrderData {
 }
 interface Seat {
   id: number;
-  seatRow:string;
+  seatRow: string;
   seatNumber: string;
   isAvailable: number;
 }
@@ -53,7 +54,8 @@ export default function OrderDetail() {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [movieTitle, setMovieTitle] = useState("");
   const [showTime, setShowTime] = useState("");
-
+  // Inside your component
+  const [isChecked, setIsChecked] = useState(false);
   useEffect(() => { //get seats data
     if (anOrderData.seatsId) {
       (async () => {
@@ -99,8 +101,8 @@ export default function OrderDetail() {
     const now = new Date();
     const userId = parseInt(sessionStorage.getItem('user_id') || '');
     const orderDate = now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' });
-    const canceled = 'N';
-    const status = '處理中';
+    const canceled = '未取消';
+    const status = '訂票成功';
     //setAnOrderData({...anOrderData,orderDate})
     const requestData = { ...anOrderData, orderDate, canceled, status };
 
@@ -117,26 +119,15 @@ export default function OrderDetail() {
         console.log(error);
       }
     })();
-
-    // try {
-    //   const response = await axios.post(
-    //     `${api}/users/${userId}/orders`,
-    //     requestData
-    //   );
-    //   console.log(response);
-    //   console.log("Form Submitted!");
-    //   alert('訂票成功');
-    //   navigate('/');
-    //   // Redirect or navigate to a success page here
-    // } catch (error) {
-    //   console.log(error);
-    // }
   };
-
+  const check = anOrderData.payment && isChecked;
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsChecked(event.target.checked);
+  };
 
   return (
     <Container>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom marginTop={7} >
         *請確認所選擇之電影、日期、場次是否正確
       </Typography>
 
@@ -144,45 +135,41 @@ export default function OrderDetail() {
         <Typography variant="h6" gutterBottom>
           訂票明細 Booking Details
         </Typography>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}  >
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>電影</TableCell>
-                  <TableCell>日期</TableCell>
-                  <TableCell>場次</TableCell>
-                  <TableCell>票種</TableCell>
-                  <TableCell>座位</TableCell>
-                  <TableCell>手續費</TableCell>
-                  <TableCell>購票總價</TableCell>
+                  <TableCell style={{ fontSize: '1.2rem' }}>電影</TableCell>
+                  <TableCell style={{ fontSize: '1.2rem' }}>日期</TableCell>
+                  <TableCell style={{ fontSize: '1.2rem' }}>場次</TableCell>
+                  <TableCell style={{ fontSize: '1.2rem' }}>票種</TableCell>
+                  <TableCell style={{ fontSize: '1.2rem' }}>座位</TableCell>
+                  <TableCell style={{ fontSize: '1.2rem' }}>手續費</TableCell>
+                  <TableCell style={{ fontSize: '1.2rem' }}>購票總價</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 <TableRow>
-                  <TableCell>{movieTitle}</TableCell>
-                  <TableCell>{showTime[1]}</TableCell>
-                  <TableCell>{showTime[0]}</TableCell>
-                  <TableCell>
-                    {anOrderData?.ticket === "Regular_Ticket" ? "全票" : "優待票"}
-                    <Typography >
-                      {anOrderData?.ticket === "Regular_Ticket" ? "$100" : "$90"}
+                  <TableCell style={{ fontSize: '1rem' }}>{movieTitle}</TableCell>
+                  <TableCell style={{ fontSize: '1rem' }}>{showTime[1]}</TableCell>
+                  <TableCell style={{ fontSize: '1rem' }}>{showTime[0]}</TableCell>
+                  <TableCell style={{ fontSize: '1rem' }}>
+                    {anOrderData?.ticket}
+                    <Typography style={{ fontSize: '1rem' }}>
+                      {anOrderData?.ticket === "全票" ? "$100" : "$90"}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    {seats.map((seat) =>`${seat.seatRow}${seat.seatNumber}`).join(', ')}
+                  <TableCell style={{ fontSize: '1rem' }}>
+                    {seats.map((seat) => `${seat.seatRow}${seat.seatNumber}`).join(', ')}
                   </TableCell>
-                  <TableCell>${20 * anOrderData.quantity}</TableCell>
-                  <TableCell >
+                  <TableCell style={{ fontSize: '1rem' }}>${20 * anOrderData.quantity}</TableCell>
+                  <TableCell style={{ fontSize: '1rem' }} >
                     {/* <Typography > */}
-                    {anOrderData?.ticket === "Regular_Ticket" ? "$100" : "$90"} * {anOrderData.quantity} + $20 * {anOrderData.quantity}=
+                    {anOrderData?.ticket === "全票" ? "$100" : "$90"} * {anOrderData.quantity} + $20 * {anOrderData.quantity}=
                     ${anOrderData?.totalAmount}
                     {/* </Typography> */}
                   </TableCell>
-                  {/* <TableCell>{anOrderData?.price}</TableCell> */}
-                  {/* <TableCell>
-                  ${orderDetails?.price * orderDetails?.quantity}
-                </TableCell> */}
                 </TableRow>
               </TableBody>
             </Table>
@@ -190,14 +177,20 @@ export default function OrderDetail() {
           <PaymentSelect
             onChange={(payment) => setAnOrderData({ ...anOrderData!, payment })}
           />
-          <Button type="submit" variant="contained" color="primary">
+          <div style={{ margin: '20px 0' }}>
+            <label>
+              <input type="checkbox" onChange={handleCheckboxChange} />
+              我已經閱讀並同意線上訂票須知及電影分級制度說明
+            </label>
+          </div>
+          <Button type="submit" variant="contained" color="primary" style={{ marginLeft: '10px' }} disabled={!check}>
             Submit Payment
           </Button>
         </form>
       </Paper>
-      <h5>
-        我已經閱讀並同意線上訂票須知及電影分級制度說明
-      </h5>
+
+
+
     </Container>
   );
 };

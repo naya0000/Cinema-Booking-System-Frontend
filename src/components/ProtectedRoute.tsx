@@ -54,18 +54,14 @@ export const ProtectedRoute: React.FC<Props> = ({ component: RouteComponent, req
     setIsAuthenticated(!!token);
   },[token]);
 
-  // const userHasRequiredRole = role.some((role) => requiredRole.includes( role.name));
-  // console.log("roles: ", userHasRequiredRole);
-  // console.log(isAuthenticated);
-
   if (isAuthenticated) { //authenticated by the token
     if (role===requiredRole[0]) { //has authorication
       return <RouteComponent {...rest} />; 
-    } else {
+    } else{
       return <AccessDenied />;
     }
   } else {
-    alert(`請先登入\nPlease Login first\n即將導向: ${requiredRole[0]==='ROLE_USER'?'用戶':'管理員'}登入頁面`);
+    alert(`請先登入\n即將導向${requiredRole[0]==='ROLE_USER'?'用戶':'管理員'}登入頁面`);
     if(requiredRole[0]==='ROLE_USER'){
       return <Navigate to="/Member/Login" /> //back to home page
     }else{

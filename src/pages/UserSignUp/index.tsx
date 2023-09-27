@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 const initialFormData = {
   name: '',
   password: '',
-  confirmPassword:'',
+  confirmPassword: '',
   username: '',
   phoneNumber: '',
 };
@@ -29,9 +29,14 @@ export default function UserSignUp() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if(formData.password!==formData.confirmPassword){
+    // Check if the username or password field is empty
+    if (!formData.username || !formData.password || !formData.name || !formData.confirmPassword || !formData.phoneNumber) {
+      alert('請填寫完整資料'); // Provide a meaningful error message
+      return; // Exit the function without making the axios request
+    }
+    if (formData.password !== formData.confirmPassword) {
       alert('密碼確認錯誤，請重新註冊。');
-      return ;
+      return;
     }
     // register new user
     axios.post(`${api}/auth`, {
@@ -42,7 +47,7 @@ export default function UserSignUp() {
     })
       .then((response) => {
         //console.log(response);
-        if(response.status===201){
+        if (response.status === 201) {
           alert(`${formData.username} ${response.data}\n 即將導向影城首頁`);
           navigate('/');
         }

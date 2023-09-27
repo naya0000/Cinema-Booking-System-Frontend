@@ -20,23 +20,34 @@ interface Props {
   timeList: Session[];
 }
 const CustomRadio = styled(Radio)`
-  color: red; /* Change the color to red */
+  color: #757575; /* Change the color to red */
   &.Mui-checked {
-    color: red; /* Change the color to white when checked */
+    color:#757575; /* Change the color to white when checked */
   }
+
+`;
+const CustomTimeRadio = styled(Radio)`
+color: #1565c0; /* Change the color to blue */
+&.Mui-checked {
+  color:#1565c0; /* Change the color to white when checked */
+}
 `;
 const CustomFormControlLabel = styled(FormControlLabel)`
   .MuiFormControlLabel-label {
     color: grey; /* Set label text color to white */
+    margin-right: 14px
   }
+  
 `;
 const CustomFormControl = styled(FormControl)`
-  margin-bottom: 16px; // Add margin to the bottom to reduce the form's height
+  margin-bottom: 8px; // Add margin to the bottom to reduce the form's height
+  margin-top: 12px; 
 `;
 
 const CustomRadioGroup = styled(RadioGroup)`
-  margin-bottom: -8px; // Add negative margin to compensate for the smaller FormControl's margin
-`;
+  margin-bottom: 0px; // Add negative margin to compensate for the smaller FormControl's margin
+ 
+  `;
 export default function DateSelect({  onChange, timeList }: Props) {
 // export const DateSelect: React.FC<Props> = ({ timeList, ...rest }) => {
   console.log(timeList);
@@ -56,14 +67,14 @@ export default function DateSelect({  onChange, timeList }: Props) {
   const [selectedTime, setSelectedTime] = useState("");
   const timesForSelectedDate = dateAndTimeMap.get(selectedDate) || [];
 
-  useEffect(() => {
-    console.log("selectedDate:", selectedDate);//setState is asynchronous,
-    // which means that when you call setSelectedDate(event.target.value);, the state selectedDate may not immediately update to the new value.
-  }, [selectedDate]); //so you should use the useEffect hook to watch for changes in the state.
+  // useEffect(() => {
+  //   console.log("selectedDate:", selectedDate);//setState is asynchronous,
+  //   // which means that when you call setSelectedDate(event.target.value);, the state selectedDate may not immediately update to the new value.
+  // }, [selectedDate]); //so you should use the useEffect hook to watch for changes in the state.
 
-  useEffect(() => {
-    console.log("selectedTime:", selectedTime);
-  }, [selectedTime]);
+  // useEffect(() => {
+  //   console.log("selectedTime:", selectedTime);
+  // }, [selectedTime]);
 
   const handleDateChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
     setSelectedDate(event.target.value);
@@ -81,8 +92,10 @@ export default function DateSelect({  onChange, timeList }: Props) {
 
   return (
     <div>
-      <FormControl fullWidth>
-        <FormLabel id="demo-row-radio-buttons-group-label">請選擇日期及場次:</FormLabel>
+      <FormControl fullWidth >
+        <FormLabel id="demo-row-radio-buttons-group-label"  sx={{color:"black",fontSize: '18px',marginBottom:'10px' }} >
+          請選擇日期:
+          </FormLabel>
         <CustomRadioGroup
           row
           aria-labelledby="demo-controlled-radio-buttons-group"
@@ -97,7 +110,9 @@ export default function DateSelect({  onChange, timeList }: Props) {
       </FormControl>
       {selectedDate && (
         <CustomFormControl  fullWidth>
-          <FormLabel id="demo-row-radio-buttons-group-label"></FormLabel>
+          <FormLabel id="demo-row-radio-buttons-group-label"  sx={{color:"black",fontSize: '18px',marginBottom:'10px' }}>
+            請選擇場次:
+          </FormLabel>
           <CustomRadioGroup
           row
           aria-labelledby="demo-controlled-radio-buttons-group"
@@ -106,7 +121,7 @@ export default function DateSelect({  onChange, timeList }: Props) {
           onChange={handleTimeChange}
         >
             {timesForSelectedDate.map((time) => (
-              <CustomFormControlLabel value={time} control={<CustomRadio />} label={time} />
+              <CustomFormControlLabel value={time} control={<CustomTimeRadio />} label={time} />
             ))}
           </CustomRadioGroup>
         </CustomFormControl>

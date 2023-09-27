@@ -86,20 +86,44 @@ export default function MovieListPage() {
                             </Box>
                         </a>
                         <Box flex="1.5" marginRight={4}>
-                            <a href={`/cinemas/Booking/id=${movie.id}`} style={{ textDecoration: "none" }}>
-                                <Typography variant="h5" component="h1">
+                            <a href={`/cinemas/Booking/id=${movie.id}`} style={{ textDecoration: "none", color: 'darkblue' }}>
+                                <Typography variant="h5" component="h1" marginBottom={2}>
                                     {movie.title}
                                 </Typography>
                             </a>
-                            <Typography variant="body2" color="textSecondary">
+                            <Typography variant="body2" sx={{ color: "royalblue" }}>
+                                <b>上映日期</b>
+                            </Typography>
+                            <Typography variant="body2" marginBottom={2}>
+                                {movie.releaseDate}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: "royalblue" }}>
+                                <b> 類型</b>
+                            </Typography>
+                            <Typography variant="body2" >
+                                {movie.genre}
+                            </Typography>
+                            {/* <Typography variant="body2" color="textSecondary">
                                 上映日期: {movie.releaseDate}
-                            </Typography>
-                            <Typography variant="body2" color="textSecondary">
+                            </Typography> */}
+                            {/* <Typography variant="body2" color="textSecondary">
                                 類型: {movie.genre}
-                            </Typography>
-                            <Typography variant="body2" color="textSecondary">
+                            </Typography> */}
+                            <Box
+                                style={{
+                                    display: 'inline-block',
+                                    backgroundColor: `${movie.level === '普遍級' ? 'green' : movie.level === '保護級' ? 'blue' : movie.level === '輔導級' ? 'orange' : 'red'}`,
+                                    color: 'white',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    margin: '15px 0'
+                                }}
+                            >
                                 {movie.level}
-                            </Typography>
+                            </Box>
+                            {/* <Typography variant="body2" color="textSecondary">
+                                {movie.level}
+                            </Typography> */}
                         </Box>
                         <Box flex="2.5">
                             <Typography variant="h6" component="h2">

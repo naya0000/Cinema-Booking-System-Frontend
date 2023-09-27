@@ -94,12 +94,12 @@ export default function UserEditPassword() {
   return (
     <Container component="main" maxWidth="xs">
       <CssBaseline />
-      <Typography component="h5" variant="h5"> 
+      {/* <Typography component="h5" variant="h5"> 
       姓名: {userData.name}
       </Typography>
       <Typography component="h5" variant="h5"> 
       帳號: {userData.username}
-      </Typography>
+      </Typography> */}
       <Box
         sx={{
           marginTop: 8,

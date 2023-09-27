@@ -65,8 +65,8 @@ export default function OrderDetail() {
 
   return (
     <Container>
-      <Typography variant="h6" gutterBottom>
-        訂票明細 Booking Details
+      <Typography variant="h6" gutterBottom marginTop={5}>
+        訂票明細
       </Typography>
 
       <Paper elevation={3} style={{ padding: '20px', width: '100%' }}>
@@ -109,9 +109,9 @@ export default function OrderDetail() {
                   <TableCell>{order.totalAmount}</TableCell>
                   <TableCell>{order.status}</TableCell>
                   <TableCell>
-                    {order.canceled === 'Y' && order.status === '已取消'
-                      ? '已確認取消訂單'
-                      : order.canceled === 'Y' && order.status === '處理中'
+                    {order.status === '已取消'
+                      ? ''
+                      : order.canceled === '使用者' && order.status === '處理中'
                         ? '已申請取消訂單'
                         : <button onClick={() => handleCancelOrder(order.id, order)}>取消訂單</button>
                     }

@@ -22,7 +22,7 @@ function AccessDenied() {
           <Box component='form' noValidate sx={{ mt: 3 }}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={12}>
-                <h1>AccessDenied</h1>
+                <h2>沒有權限</h2>
               </Grid>
             </Grid>
           </Box>

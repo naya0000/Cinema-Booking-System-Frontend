@@ -19,14 +19,15 @@ export default function PaymentSelect({ onChange }: Props) {
 
   return (
     <Box sx={{ m: 1, minWidth: 80 }}>
-      <FormControl sx={{ m: 1, minWidth: 190 }}>
-        <InputLabel id="demo-simple-select-autowidth-label">Payment</InputLabel>
+      <FormControl sx={{ m: 1, minWidth: 190,marginLeft:'-5px' }}>
+        <InputLabel id="paymentId">支付方式</InputLabel>
         <Select
-          labelId="demo-simple-select-autowidth-label"
+          labelId="paymentId"
           id="demo-simple-select-autowidth"
           value={payment}
           label="Payment"
           onChange={handleChange}
+          //style={{marginLeft:'-5px'}}
         >
           {payments.map((payment) => (
             <MenuItem key={payment} value={payment}>  

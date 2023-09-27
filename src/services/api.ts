@@ -289,28 +289,7 @@ export const updateUserStatus = async (user_id: number, locked: boolean) => {
     throw error;
   }
 };
-// export const updateUserStatus = async (user_id: number, userStatus: string) => { 
-//   try {
-//     const response = await axios.put( //ADMIN
-//       `${BASE_URL}/users/status`,
-//       {
-//         id: user_id,
-//         status: userStatus,
-//       }
-//       , {
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${token}`
-//         },
-//       }
-//     );
-//     // console.log(response);
-//     return response;
-//   } catch (error) {
-//     console.log(error);
-//     throw error;
-//   }
-// };
+
 export const createOrder = async (userId: number, requestData: OrderData) => {
   try {
     const response = await axios.post(
@@ -429,20 +408,4 @@ export const fetchMovieSeats = async (movieId: number, sessionId: number) => {
     throw error;
   }
 };
-// export const createMovieSeats = async (requestData: SeatCreate) => {
-//   try {
-//     const response = await axios.post(
-//       `${BASE_URL}/seats`,
-//       requestData
-//     );
-//     if (response.status === 201) {
-//       console.log("create seats successful");
-//       return response.data;
-//     }
-//   } catch (error) {
-//     console.log("error:", error);
-//     throw error; // throw back the error to be handled by the caller
-//   }
-// };
-// /fetchSessions
-// Add more API functions for booking, payments, etc.
+

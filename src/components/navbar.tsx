@@ -72,37 +72,53 @@ function ResponsiveAppBar() {
       // position="static"
       position="fixed" // Set the position to "fixed"
       sx={{
-        backgroundColor:
+        background:
           role === 'ROLE_ADMIN' || location.pathname === '/Admin/Login' // Check if on Admin/Login page
-            ? 'blue'
-            : '#f288a8',
-        
+            ? 'linear-gradient(180deg, rgba(38, 13, 238, 0.8) 0%, rgba(38, 13, 238, 0.3) 100%)'
+            :'linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.1) 100%)', // Define your gradient background
+        height: '90px', // Adjust the height here
       }}
       style={{ top: 0 }} // Keep the AppBar at the top
       
-    > <Toolbar>
+    > <Toolbar  disableGutters sx={{ justifyContent: 'space-between' }}>
     {/* Set background color to red */}
       <Container maxWidth="xl">
         <Toolbar disableGutters >
-          <AdbIcon sx={{ display: { xs: 'none', md: 'flex', color: '#f8b7ca' }, mr: 1 }} />
+          {/* <AdbIcon sx={{ display: { xs: 'none', md: 'flex', color: '#f8b7ca' }, mr: 1 }} /> */}
           <Typography
-            variant="h6"
+            variant="h5"
             noWrap
             component="a"
             href="/cinemas"
             sx={{
               mr: 2,
-              display: { xs: 'none', md: 'flex', color: '#fce2ea' }, // `MIRAMAR` color
-              fontFamily: 'monospace',
+              display: { xs: 'none', md: 'flex', color: 'red' }, // `MIRAMAR` color
+              fontFamily: 'georgia',
               fontWeight: 700,
-              letterSpacing: '.3rem',
+              //letterSpacing: '.3rem',
               color: 'inherit',
               textDecoration: 'none',
             }}
           >
             MIRAMAR
           </Typography>
-
+          <Typography
+            variant="h5"
+            noWrap
+            component="a"
+            href="/cinemas"
+            sx={{
+              mr: 2,
+              display: { xs: 'none', md: 'flex', color: 'rgba(240, 207, 56, 1)' }, // `MIRAMAR` color
+              fontFamily: 'sans-serif',
+              //fontWeight: 700,
+              //letterSpacing: '.3rem',
+              color: 'inherit',
+              textDecoration: 'none',
+            }}
+          >
+            美麗華影城
+          </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               size="large"
@@ -154,35 +170,6 @@ function ResponsiveAppBar() {
             MIRAMAR
           </Typography>
 
-          {/* {role === 'ROLE_ADMIN' ? (
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-              {adminPages.map((page) => (
-                <Button
-                  key={page}
-                  onClick={handleCloseNavMenu}
-                  component="a"
-                  href={renderSwitch(page)}
-                  sx={{ my: 2, color: '#930059', display: 'inherit' }}
-                >
-                  {page}
-                </Button>
-              ))}
-            </Box>
-          ) : (
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-              {pages.map((page) => (
-                <Button
-                  key={page}
-                  onClick={handleCloseNavMenu}
-                  component="a"
-                  href={renderSwitch(page)}
-                  sx={{ my: 2, color: '#930059', display: 'inherit' }}
-                >
-                  {page}
-                </Button>
-              ))}
-            </Box>
-          )} */}
           {isAuthenticated ? (
             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
               {role === 'ROLE_ADMIN' ? (
@@ -196,7 +183,9 @@ function ResponsiveAppBar() {
                       my: 2,
                       color: 'white',
                       display: 'inherit',
-                      
+                      '&:hover': {
+                        color: 'yellow', // Change the color on hover
+                      },
                     }}
                   >
                     {page}
@@ -209,13 +198,19 @@ function ResponsiveAppBar() {
                     onClick={handleCloseNavMenu}
                     component="a"
                     href={renderSwitch(page)}
+                    
                     sx={{
                       my: 2,
                       color:
                         location.pathname === '/Admin/Login' // Check if on Admin/Login page
                           ? 'blue'
                           : 'white',
-                      display: 'inherit'
+                      display: 'inherit',
+                      '&:hover': {
+                        color: 'yellow', // Change the color on hover
+                      },
+                      
+                 
                     }}
                   >
                     {page}
@@ -236,9 +231,11 @@ function ResponsiveAppBar() {
                       color:
                         location.pathname === '/Admin/Login' // Check if on Admin/Login page
                           ? 'white'
-                          : '#930059',
+                          : 'white',
                       display: 'inherit',
-                      
+                      '&:hover': {
+                        color: 'yellow', // Change the color on hover
+                      },
                       
                     }}
                     //sx={{ my: 2, color: '#930059', display: 'inherit' }}
@@ -317,13 +314,6 @@ function ResponsiveAppBar() {
                   </Link>
                 ]
               )}
-              {/* {settings.map((setting) => (
-                <Link to={`/${setting.toLowerCase()}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                    <Typography textAlign="center">{setting}</Typography>
-                  </MenuItem>
-                </Link>
-              ))} */}
             </Menu>
           </Box>
         </Toolbar>

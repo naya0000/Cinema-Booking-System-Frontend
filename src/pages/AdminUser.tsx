@@ -40,6 +40,7 @@ export default function AdminUser() {
   const [users, setUsers] = useState<User[]>([]);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedId, setSelectedId] = useState<number>();
   const [userData, setUserData] = useState({
     id: '',
@@ -93,18 +94,29 @@ export default function AdminUser() {
       });
     // }
   }
-
+  const openDeleteUserDialog = (userId: number) => {
+    setOpenDeleteDialog(true);
+    setSelectedId(userId);
+    // fetchUserById(userId);
+  };
   const openEditUserDialog = (userId: number) => {
     setOpenEditDialog(true);
     fetchUserById(userId);
   };
   const openEditPasswordDialog = (userId: number) => {
+    setNewPassword('');
     setOpenPasswordDialog(true);
     setSelectedId(userId);
     // fetchUserById(userId);
   };
   const closeEditUserDialog = () => {
     setOpenEditDialog(false);
+  };
+  const closeDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
+  const closePasswordDialog = () => {
+    setOpenPasswordDialog(false);
   };
   const toggleLock = async (userId: number, locked: boolean) => {
     // Implement the logic to toggle user account lock status
@@ -127,7 +139,33 @@ export default function AdminUser() {
     }
 
   };
-
+  const handleDeletePassword=()=>{
+    axios.post(`${api}/users/delete`, //AUTH
+     selectedId
+    ,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      })
+      .then((response) => {
+        closeDeleteDialog();
+        if (response.status === 200) {
+          //console.log('刪除用戶成功');
+          alert('刪除用戶成功');
+          setUsers((prevUsers) =>
+          prevUsers.filter((user) =>
+            user.id !== selectedId
+          )
+        );
+        }
+      })
+      .catch((error) => {
+        alert(error.response.message);
+        console.error('刪除用戶失敗:', error);
+      });
+  }
   const handleEditUser = () => {
     axios.put(`${api}/users/id`, { //AUTH
       id: userData.id,
@@ -168,10 +206,10 @@ export default function AdminUser() {
         }
       })
       .then((response) => {
-        closeEditUserDialog();
+        closePasswordDialog();
         if (response.status === 200) {
           console.log('User data updated successfully');
-          alert('更新用戶資訊成功');
+          alert('更新用戶密碼成功');
         }
       })
       .catch((error) => {
@@ -184,8 +222,8 @@ export default function AdminUser() {
     <Container component="main" maxWidth="lg">
       <CssBaseline />
       <Box py={2}>
-        <Typography variant="h4" gutterBottom>
-          用户管理
+        <Typography variant="h5" gutterBottom marginTop={3}>
+          會員管理
         </Typography>
       </Box>
       <TableContainer component={Paper}>
@@ -246,11 +284,12 @@ export default function AdminUser() {
                     更改密碼
                   </Button>
                   <Button
+                    onClick={() => openDeleteUserDialog(user.id)}
                     startIcon={<Delete />}
                     size="small"
                     color="error"
                   >
-                    删除用户
+                    刪除用戶
                   </Button>
                 </TableCell>
               </TableRow>
@@ -260,9 +299,10 @@ export default function AdminUser() {
       </TableContainer>
     </Container>
     <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
-      <DialogTitle>修改用戶資料</DialogTitle>
-      <DialogContent>
+      <DialogTitle >修改用戶資料</DialogTitle>
+      <DialogContent >
         <TextField
+          sx={{margin:'10px 0'}}
           label="用戶名稱Name"
           fullWidth
           required
@@ -276,13 +316,6 @@ export default function AdminUser() {
           value={userData.phoneNumber}
           onChange={(e) => setUserData({ ...userData, phoneNumber: e.target.value })}
         />
-        {/* <TextField
-          label="密碼Password"
-          fullWidth
-          required
-          value={userData.password}
-          onChange={(e) => setUserData({ ...userData, password: e.target.value })}
-        /> */}
       </DialogContent>
       <DialogActions>
         <Button onClick={() => setOpenEditDialog(false)}>
@@ -301,6 +334,7 @@ export default function AdminUser() {
       <DialogContent>
         <TextField
           label="密碼Password"
+          sx={{margin:'10px 0'}}
           fullWidth
           required
           value={newPassword}
@@ -316,6 +350,30 @@ export default function AdminUser() {
         //disabled={!textField}
         >
           Confirm
+        </Button>
+      </DialogActions>
+    </Dialog>
+    <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+      <DialogTitle>確定要刪除該用戶嗎?
+      </DialogTitle>
+      {/* <DialogContent>
+        <TextField
+          label="密碼Password"
+          fullWidth
+          required
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+        />
+      </DialogContent> */}
+      <DialogActions>
+        <Button onClick={() => setOpenDeleteDialog(false)}>
+          取消
+        </Button>
+        <Button onClick={() => handleDeletePassword()}
+          color="primary"
+        //disabled={!textField}
+        >
+          確定
         </Button>
       </DialogActions>
     </Dialog>

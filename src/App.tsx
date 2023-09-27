@@ -48,7 +48,7 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/Movie/detail" element={<MovieDetail />} />
+        <Route path="/Movie/Detail" element={<MovieDetail />} /> {/*http://localhost:3000/cinemas/Movie/detail?id=1*/}
         <Route path="/Member" element={<ProtectedRoute component={MemberPage} requiredRole={['ROLE_USER']} username={username} />} />
         <Route path="/Member/OrderHistory" element={<ProtectedRoute component={OrderHistory} requiredRole={['ROLE_USER']} username={username} />} />
         <Route path="/Order/Cancel/:orderId" element={<ProtectedRoute component={OrderCancel} requiredRole={['ROLE_USER']} username={username} />} />

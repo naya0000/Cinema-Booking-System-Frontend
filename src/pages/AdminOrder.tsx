@@ -44,7 +44,12 @@ export default function AdminOrder() {
     (async () => {
       try {
         const data = await fetchAllOrders();
-        setOrdersData(data);
+           // Format the orderDate property of each order in the data
+      const formattedData = data.map((order:Order) => ({
+        ...order,
+        orderDate: formatOrderDate(order.orderDate),
+      }));
+        setOrdersData(formattedData);
         console.log("ordersData:", data);
       } catch (error) {
         console.log(error);
@@ -52,13 +57,14 @@ export default function AdminOrder() {
     })();
   }, []);
 
-  const handleCancelOrder = async (orderId: number) => {
+  const handleCancelOrder = async (orderId: number) => { //By Admin
     try {
-      const response = await updateCanceledStatus(orderId, 'Y');
-      if (response === 200) {
+      const responseCanceled = await updateCanceledStatus(orderId, '管理員');
+      const responseOrder = await updateOrderStatus(orderId, '已取消');
+      if (responseCanceled === 200 && responseOrder===200) {
         setOrdersData((prevOrders) =>
           prevOrders.map((prevOrder) =>
-            prevOrder.id === orderId ? { ...prevOrder, canceled: 'Y' } : prevOrder
+            prevOrder.id === orderId ? { ...prevOrder, canceled: '管理員',status:'已取消'} : prevOrder
           )
         );
         alert('取消訂單成功');
@@ -68,28 +74,28 @@ export default function AdminOrder() {
       console.log(error);
     }
   };
-  const handleDeleteChange = (orderId: number) => {
-    axios.delete(`${BASE_URL}/orders/${orderId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }
-    ).then((response) => {
-      if (response.status === 200) {
-        alert(response.data);
-        setOrdersData((prevOrders) =>
-          prevOrders.filter((prevOrder) =>
-            prevOrder.id !== orderId
-          )
-        );
-      }
-    }).catch((error) => {
-      alert(error.response.data);
-      // console.log(error.response);
-    })
-  }
-  const handleStatusChange = async (orderId: number, status: string) => {
+  // const handleDeleteChange = (orderId: number) => {
+  //   axios.delete(`${BASE_URL}/orders/${orderId}`,
+  //     {
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`
+  //       }
+  //     }
+  //   ).then((response) => {
+  //     if (response.status === 200) {
+  //       alert(response.data);
+  //       setOrdersData((prevOrders) =>
+  //         prevOrders.filter((prevOrder) =>
+  //           prevOrder.id !== orderId
+  //         )
+  //       );
+  //     }
+  //   }).catch((error) => {
+  //     alert(error.response.data);
+  //     // console.log(error.response);
+  //   })
+  // }
+  const handleConfirmCancel = async (orderId: number, status: string) => {
     try {
       const response = await updateOrderStatus(orderId, status);
       if (response === 200) {
@@ -112,7 +118,25 @@ export default function AdminOrder() {
       [name]: value,
     }));
   };
-
+  // Function to format the orderDate
+  function formatOrderDate(orderDate: string) {
+    const date = new Date(orderDate);
+    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}, ${date.toLocaleTimeString([], {
+        hour12: false, // Use 24-hour format
+      })}`;
+    return formattedDate;
+  }
+  // function formatOrderDate(orderDate: string) {
+  //   const date = new Date(orderDate);
+  //   const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1)
+  //     .toString()
+  //     .padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}, ${date.toLocaleTimeString([], {
+  //       hour12: true,
+  //     })}`;
+  //   return formattedDate;
+  // }
   const filteredOrders = ordersData.filter((order) => {
     const {
       orderId,
@@ -161,25 +185,6 @@ export default function AdminOrder() {
     });
   };
   const handleDeleteSelected = () => {
-    // axios.delete(`${BASE_URL}/orders`,  { data: { foo: "bar" }},
-    // {
-    //   headers: {
-    //     'Authorization': `Bearer ${token}`
-    //   }
-    // }).then((response) => {
-    //   if (response.status === 200) {
-    //     // Delete the order from the local state
-    //     alert(response.data);
-    //     setOrdersData((prevOrders) =>
-    //       prevOrders.filter((prevOrder) =>
-    //         prevOrder.id !== orderId
-    //       )
-    //     );
-    //   }
-    // }).catch((error) => {
-    //   alert(error.response.data);
-    //   // console.log(error.response);
-    // });
     selectedOrders.forEach((orderId) => {
       axios.delete(`${BASE_URL}/orders/${orderId}`, {
         headers: {
@@ -206,42 +211,16 @@ export default function AdminOrder() {
   };
 
   return (
-    <Container>
-      <Typography variant="h6" gutterBottom>
+    <Container >
+      <Typography variant="h6" gutterBottom marginTop={4}>
         訂單管理
       </Typography>
       <Paper elevation={3} style={{ padding: '20px', width: '100%' }}>
-        {/* Filter controls */}
-        <div style={{ fontSize: '10px' }}>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleDeleteSelected}
-            disabled={selectedOrders.length === 0}
-          >
-            Delete Selected
-          </Button>
-
-          {/* <TextField
-            label="Status"
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-          />
-          <TextField
-            label="Canceled"
-            name="canceled"
-            value={filters.canceled}
-            onChange={handleFilterChange}
-          /> */}
-        </div>
-        {/* Order table */}
         <TableContainer >
           <Table >
             <TableHead>
               <TableRow>
-
-                <TableCell style={{ height: '10px' }}>
+                {/* <TableCell style={{ height: '10px' }}>
                   <TextField
                     label="Id"
                     name="orderId"
@@ -253,7 +232,8 @@ export default function AdminOrder() {
                     InputLabelProps={{ style: { fontSize: 15 } }}
                   // variant="outlined"
                   />
-                </TableCell>
+                </TableCell> */}
+                 <TableCell></TableCell>
                 <TableCell>
                   <TextField
                     label="Username"
@@ -283,13 +263,13 @@ export default function AdminOrder() {
                 </TableCell>
                 <TableCell>
                   <TextField
-                    label="OrderDate"
+                    type="date" // Set the input type to "date"
                     name="orderDate"
                     value={filters.orderDate}
                     onChange={handleFilterChange}
                     sx={{ width: 120 }}
                     size="small"
-                    style={{ marginLeft: '-10px', marginBottom: '-25px' }}
+                    style={{ marginLeft: '-10px', marginBottom: '-25px' , minWidth:'140px'}}
                     InputLabelProps={{ style: { fontSize: 15 } }} // font size of input label
                   />
                 </TableCell>
@@ -302,8 +282,7 @@ export default function AdminOrder() {
                     onChange={handleFilterChange}
                     sx={{ width: 110 }}
                     size="small"
-                    style={{ marginLeft: '-10px' }}
-
+                    style={{ marginLeft: '-10px', minWidth:'130px' }}
                   >
                     <MenuItem value="">All</MenuItem>
                     <MenuItem value="信用卡">信用卡</MenuItem>
@@ -315,26 +294,35 @@ export default function AdminOrder() {
                 <TableCell></TableCell>
                 <TableCell>
                   <TextField
-                    label="Session"
+                    type="date"
+                    //label="Session"
                     name="sessionDate"
                     value={filters.sessionDate}
                     onChange={handleFilterChange}
                     sx={{ width: 110 }}
                     size="small"
-                    style={{ marginLeft: '-10px', marginBottom: '-25px' }}
+                    style={{ marginLeft: '-10px', marginBottom: '-25px', width:'140px' }}
                     InputLabelProps={{ style: { fontSize: 15 } }}
                   />
                 </TableCell>
                 <TableCell>
                   <TextField
-                    label="Time"
+                    type="time"
+                    //label="Time"
                     name="startTime"
                     value={filters.startTime}
                     onChange={handleFilterChange}
                     sx={{ width: 110 }}
                     size="small"
-                    style={{ marginLeft: '-10px', marginBottom: '-25px' }}
+                    style={{ marginLeft: '-10px', marginBottom: '-25px', width:'150px'}}
                     InputLabelProps={{ style: { fontSize: 15 } }}
+                    InputProps={{
+                      inputProps: {
+                        step: 300, // 5 minutes interval
+                        format: 'HH:mm:ss', // 24-hour format
+                        allowEmpty: true, // Allow the field to be cleared
+                      },
+                    }}
                   />
                 </TableCell>
                 <TableCell>
@@ -354,23 +342,7 @@ export default function AdminOrder() {
                   </Select>
                 </TableCell>
                 <TableCell></TableCell>
-                <TableCell>
-                  {/* Select dropdown for Canceled */}
-                  <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>Cancel</Typography>
-                  <Select
-                    labelId="canceled"
-                    name="canceled"
-                    value={filters.canceled}
-                    onChange={handleFilterChange}
-                    sx={{ width: 110 }}
-                    size="small"
-                    style={{ marginLeft: '-10px' }}
-                  >
-                    <MenuItem value="">All</MenuItem>
-                    <MenuItem value="Y">已取消訂單</MenuItem>
-                    <MenuItem value="N">未取消訂單</MenuItem>
-                  </Select>
-                </TableCell>
+
                 <TableCell>
                   <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>Status</Typography>
                   <Select
@@ -381,23 +353,42 @@ export default function AdminOrder() {
                     onChange={handleFilterChange}
                     sx={{ width: 110 }}
                     size="small"
-                    style={{ marginLeft: '-10px' }}
+                    style={{ marginLeft: '-10px', minWidth:'130px'}}
                   >
                     <MenuItem value="">All</MenuItem>
+                    <MenuItem value="訂票成功">訂票成功</MenuItem>
                     <MenuItem value="處理中">處理中</MenuItem>
                     <MenuItem value="已完成">已完成</MenuItem>
                     <MenuItem value="已取消">已取消</MenuItem>
                     {/* Add more status options as needed */}
                   </Select>
                 </TableCell>
+                <TableCell>
+                  {/* Select dropdown for Canceled */}
+                  <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>Cancel</Typography>
+                  <Select
+                    labelId="canceled"
+                    name="canceled"
+                    value={filters.canceled}
+                    onChange={handleFilterChange}
+                    sx={{ width: 110 }}
+                    size="small"
+                    style={{ marginLeft: '-10px', minWidth:'160px' }}
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="管理員">管理員取消訂單</MenuItem>
+                    <MenuItem value="使用者">使用者取消訂單</MenuItem>
+                    <MenuItem value="未取消">未取消</MenuItem>
+                  </Select>
+                </TableCell>
               </TableRow>
               <TableRow >
-                <TableCell padding="checkbox">
+                {/* <TableCell padding="checkbox">
                   <Checkbox
                     checked={selectedOrders.length === filteredOrders.length}
                     onChange={handleSelectAll}
                   />
-                </TableCell>
+                </TableCell> */}
                 <TableCell >訂票序號</TableCell>
                 <TableCell>用戶名</TableCell>
                 <TableCell>片名</TableCell>
@@ -409,19 +400,19 @@ export default function AdminOrder() {
                 <TableCell>場次時間</TableCell>
                 <TableCell>票種</TableCell>
                 <TableCell>總金額</TableCell>
-                <TableCell>取消狀態</TableCell>
                 <TableCell>訂單狀態</TableCell>
+                <TableCell>取消狀態</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell padding="checkbox">
+                  {/* <TableCell padding="checkbox">
                     <Checkbox
                       checked={selectedOrders.includes(order.id)}
                       onChange={() => handleSelectOrder(order.id)}
                     />
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell>{order.id}</TableCell>
                   <TableCell>{order.username}</TableCell>
                   <TableCell>{order.movie}</TableCell>
@@ -438,18 +429,18 @@ export default function AdminOrder() {
                   <TableCell>{order.startTime}</TableCell>
                   <TableCell>{order.ticket}</TableCell>
                   <TableCell>{order.totalAmount}</TableCell>
-                  <TableCell>{order.canceled === 'Y' ? '使用者已取消訂單' : ''}</TableCell>
                   <TableCell>{order.status}</TableCell>
+                  <TableCell>{order.canceled === '使用者' ? '使用者取消訂單' : order.canceled === '管理員' ?'管理員取消訂單':''}</TableCell>
                   <TableCell>
-                    {order.canceled === 'Y' && order.status === '處理中' && (
-                      <button onClick={() => handleStatusChange(order.id, '已取消')}>取消訂單確認</button>
+                    {order.canceled === '使用者' && order.status === '處理中' && (
+                      <button onClick={() => handleConfirmCancel(order.id, '已取消')}>取消訂單確認</button>
                     )}
-                    {order.canceled === 'N' && order.status === '處理中' && (
-                      <button onClick={() => handleStatusChange(order.id, '已取消')}>取消訂單</button>
+                    {order.canceled === '未取消' && order.status === '訂票成功' && (
+                      <button onClick={() => handleCancelOrder(order.id)}>取消訂單</button>
                     )}
-                    {order.status === '已取消' && (
+                    {/* {order.status === '已取消' && (
                       <button onClick={() => handleDeleteChange(order.id)}>刪除訂單</button>
-                    )}
+                    )} */}
                   </TableCell>
                 </TableRow>
               ))}

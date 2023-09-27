@@ -5,11 +5,12 @@ import { Typography, Button, Container, Box } from '@mui/material';
 export default function MemberPage() {
   const user_id = sessionStorage.getItem('user_id') || '';
   const username = sessionStorage.getItem('username') || '';
+  const name = sessionStorage.getItem('name') || '';
   return (
     <Container>
-      <Box mt={3}>
-        <Typography variant="h4" gutterBottom>
-          歡迎, {username}!
+      <Box mt={7}>
+        <Typography variant="h5" gutterBottom>
+          歡迎, {name}!
         </Typography>
         <Button component={Link} to="/Member/OrderHistory" variant="contained" color="primary" size="large" sx={{ marginRight: 2 }}>
           訂單查詢

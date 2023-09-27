@@ -1,5 +1,5 @@
 import { createMovieSession, fetchMovieSeats, fetchMovieSessions } from '@/services/api';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom'; // Import useParams to access route parameters
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -9,6 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import '@assets/style.css';
 import axios from 'axios';
+import { isDisabled } from '@testing-library/user-event/dist/utils';
 interface Movie {
   id: number;
   title: string;
@@ -40,14 +41,20 @@ interface SeatData {
   movieId: number;
   sessionId: number;
 }
+interface SeatGrouped {
+  seatRow: string;
+  seats: Seat[];
+}
+
 const api = 'http://localhost:8080';
-const token = sessionStorage.getItem('token'); 
+const token = sessionStorage.getItem('token');
 export default function AddSeatPage() {
   const location = useLocation();
   const movieId = parseInt(new URLSearchParams(location.search).get('movie') || '');
   const sessionId = parseInt(new URLSearchParams(location.search).get('session') || '');
   const [seats, setSeats] = useState<Seat[]>([]);
   const { movieObject, sessionObject } = location.state as { movieObject: Movie, sessionObject: Session };
+  const [isSessionEditable, setIsSessionEditable] = useState(true);
   console.log("movie:", movieObject);
   console.log("session:", sessionObject);
 
@@ -60,6 +67,12 @@ export default function AddSeatPage() {
     sessionId: sessionId,
   });
   useEffect(() => {
+    // Check if the session date and start time are before the current time
+    const currentDateTime = new Date();
+    const sessionDateTime = new Date(`${sessionObject.sessionDate} ${sessionObject.startTime}`);
+    setIsSessionEditable(sessionDateTime > currentDateTime);
+  }, [sessionObject]);
+  useEffect(() => {
     (async () => {
       try {
         const seatsData = await fetchMovieSeats(movieId, sessionId);
@@ -70,7 +83,10 @@ export default function AddSeatPage() {
       }
     })();
   }, []);
-  const sortedSeats = seats.sort((a, b) => {
+  // Group seats by seatRow
+  const groupedSeats: SeatGrouped[] = [];
+  // const sortedSeats = 
+  seats.sort((a, b) => {
     // 先按 seatRow 排序，然后按 seatNumber 排序
     if (!a.seatRow)
       console.log("a.seatRow:", a);
@@ -83,6 +99,15 @@ export default function AddSeatPage() {
     }
     return seatRowA.localeCompare(seatRowB);
   });
+  seats.forEach((seat) => {
+    const group = groupedSeats.find((group) => group.seatRow === seat.seatRow);
+    if (group) {
+      group.seats.push(seat);
+    } else {
+      groupedSeats.push({ seatRow: seat.seatRow, seats: [seat] });
+    }
+  });
+
   const handleAddSeat = () => { //ADMIN
     //const token1 = eyJhbGciOiJIUzUxMiJ9.eyJ1c2VybmFtZSI6InNlbGluYUBnbWFpbC5jb20iLCJleHAiOjE2OTYxMTg1OTUsImlzcyI6Ik1vdmllIFRoZWF0ZXIiLCJyb2xlcyI6WyJST0xFX0FETUlOIiwiUk9MRV9VU0VSIl19.huzme4XIZ_GFwLDi1e2-Dp6cKtooCd7mfbgrfclSj3fbvaJC-K9n49yT4eX69PemfwyUOc6rKcVYYiF7KhihnQ;
     axios.post(
@@ -102,11 +127,11 @@ export default function AddSeatPage() {
         }
       })
       .catch((error) => {
-        if(error.response.status === 400){
+        if (error.response.status === 400) {
           alert(error.response.data);
         }
       })
-      setOpenAddSeatDialog(false);
+    setOpenAddSeatDialog(false);
   };
   useEffect(() => {
     console.log("seats change:", seats);
@@ -130,11 +155,11 @@ export default function AddSeatPage() {
       id: id,
       isAvailable: isAvailable,
     },
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       .then((response) => {
         //console.log(response);
         if (response.status === 200) {
@@ -152,20 +177,20 @@ export default function AddSeatPage() {
         }
       )
   }
-  const deleteSeat = (id:number) =>{ 
+  const deleteSeat = (id: number) => {
     axios.delete(`${api}/seats/${id}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }) //ADMIN
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }) //ADMIN
       .then((response) => {
         //console.log(response);
         if (response.status) {
           alert(response.data);
           setSeats((prevSeats) =>
             prevSeats.filter((prevSeat) =>
-              prevSeat.id !== id 
+              prevSeat.id !== id
             )
           );
         }
@@ -176,70 +201,94 @@ export default function AddSeatPage() {
         }
       )
   }
+  // Calculate the maximum number of seats in a row
+  const maxSeatsInRow = Math.max(...groupedSeats.map(group => group.seats.length), 0);
+
   const textField = formSeat.seatNumber;
   return (
-    <div>
+    <div >
       {/* Render your form for adding sessions here */}
-      <h2>{movieObject.title}</h2>
-      <h5>播放日期 {sessionObject.sessionDate} </h5>
-      <h5>{sessionObject.startTime} 到 {sessionObject.endTime}</h5>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <Typography marginTop={4} variant="h5">{movieObject.title} 場次:</Typography>
+          {/* <Typography variant="h6">場次:</Typography> */}
+          <Typography variant="h6">{sessionObject.sessionDate}, {sessionObject.startTime} ~ {sessionObject.endTime}</Typography>
+        </div>
+       
+        
+        <div style={{ display: 'flex', alignItems: 'center', marginTop: '16px'  }}>
+          <CheckCircleIcon color="primary" style={{ marginRight: '8px' }} />{'未售出'}
+          <CancelIcon color="error" style={{ margin: '0 8px' }} />{'已售出'}
+          <DeleteOutlineIcon style={{ marginLeft: '8px' }} />{'刪除座位'} 
+        </div>
+        <div style={{display: 'flex', alignItems: 'center',marginTop: '16px', color:"red"}}>
+          {isSessionEditable?' ':'場次已過期，無法修改座位。'}
+        </div>
+     
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => handleAddSeatForMovie()}
+          disabled={!isSessionEditable}
+        >
+          新增電影座位
+        </Button>
+
+      </div>
+      {/* <h5>{sessionObject.sessionDate} {sessionObject.startTime} ~ {sessionObject.endTime}</h5> */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
-            {/* <TableRow>
-              <TableCell>座位号</TableCell>
-              <TableCell>是否可用</TableCell>
-            </TableRow> */}
           </TableHead>
           <TableBody>
+
             <TableRow>
-              <TableCell>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => handleAddSeatForMovie()}
-                >
-                  新增电影座位
-                </Button>
-              </TableCell>
-              {seats.map((seat) => (
-                <TableCell key={seat.id}>
-                  <div className="horizontal-seat">
-                    <div className="seat-row">{seat.seatRow}</div>
-                    <div className="seat-number">{seat.seatNumber}</div>
-                  </div>
-                  <div className="is-available">
-                    {seat.isAvailable ? (
+
+              {groupedSeats.map((group) => (
+                <TableRow key={group.seatRow}>
+                  <TableCell>
+                    <Typography variant="subtitle1">{group.seatRow}</Typography>
+                  </TableCell>
+                  {group.seats.map((seat) => (
+                    <TableCell key={seat.id}>
+                      <div className="horizontal-seat">
+                        <div className="seat-number">{seat.seatNumber}</div>
+                      </div>
+                      <div className="is-available">
+                        {seat.isAvailable ? (
+                          <IconButton
+                            onClick={() => toggleLock(seat.id, 0)}
+                            color="primary"
+                            disabled={ !isSessionEditable}
+                          >
+                            <CheckCircleIcon color="primary" />
+                          </IconButton>
+                        ) : (
+                          <IconButton
+                            onClick={() => toggleLock(seat.id, 1)}
+                            color="primary"
+                            disabled={ !isSessionEditable}
+                          >
+                            <CancelIcon color="error" />
+                          </IconButton>
+                        )}
+                      </div>
                       <IconButton
-                        onClick={() => toggleLock(seat.id, 0)}
-                        color="primary"
-                      >
-                        <CheckCircleIcon color="primary" />
-                      </IconButton>
-                    ) : (
-                      <IconButton
-                        onClick={() => toggleLock(seat.id, 1)}
-                        color="primary"
-                      >
-                        <CancelIcon color="error" />
-                      </IconButton>
-                    )}
-                  </div>
-                  <IconButton
                         onClick={() => deleteSeat(seat.id)}
-                       // color="primary"
+                        disabled={!seat.isAvailable||!isSessionEditable}
                       >
-                  <DeleteOutlineIcon/>
-                  </IconButton>
-                </TableCell>
+                        <DeleteOutlineIcon />
+                      </IconButton>
+                    </TableCell>
+                  ))}
+                </TableRow>
               ))}
             </TableRow>
           </TableBody>
         </Table>
       </TableContainer>
-      <CheckCircleIcon color="primary" />{'未售出'}
-      <CancelIcon color="error" />{'已售出'}
-      <DeleteOutlineIcon/>{'刪除座位'}
+
       <Dialog open={openAddSeatDialog} onClose={() => setOpenAddSeatDialog(false)}>
         <DialogTitle>請輸入要新增的電影座位:</DialogTitle>
         <DialogContent>

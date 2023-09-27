@@ -27,6 +27,7 @@ import axios from 'axios';
 import { createMovie, updateMovie, createMovieSession, createOrder, fetchMovies, deleteMovie } from '@/services/api';
 import { Link, Route, Router, Routes, useNavigate } from 'react-router-dom';
 import AddSessionPage from './AddSessionPage';
+import { Margin } from '@mui/icons-material';
 interface Movie {
   id: number;
   title: string;
@@ -44,12 +45,15 @@ interface Session {
   sessionDate: Date;
   movieId: number;
 }
-
+const BASE_URL = 'http://localhost:8080';
 const Genre = ['喜劇片', '動作片', '恐怖片', '懸疑片', '紀錄片', '愛情片', '動漫片', '科幻片', '劇情片'];
 const Level = ['普遍級', '保護級', '輔導級', '限制級'];
 export default function AdminMovie() {
+  const token = sessionStorage.getItem('token');
   const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [movies1, setMovies1] = useState<Movie[]>([]);
+  const [change, setChange] = useState(0);
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -72,19 +76,106 @@ export default function AdminMovie() {
     level: '',
     coverUrl: '',
   });
+  const today = new Date();
+  today.setDate(today.getDate() + 1);
+  const today_new = today.toISOString().split('T')[0];
 
   useEffect(() => {
-    (async () => {
+    axios.get(`${BASE_URL}/movies`)
+      .then((response) => {
+        //if (response.status === 200) {
+        // alert("get movies successful");
+        // console.log("test:");
+        setMovies(response.data);
+        setMovies1(response.data);
+        // console.log("test1:");
+        // Dynamically update the status based on releaseDate
+        setChange(1);
+
+        // }
+      }).catch((error) => {
+        // if (error.response.status === 404) {
+        alert(error.response.data);
+        //   }
+      });
+  }, [])
+  useEffect(() => {
+    // console.log("test:");
+    const updateMoviesStatus = async () => {
       try {
-        const movieData = await fetchMovies();
-        console.log("movieData:", movieData);
-        setMovies(movieData);
+        // console.log("test1:");
+        const updatedMovies = await Promise.all(
+          movies.map(async (movie) => {
+            const releaseDateParts = movie.releaseDate.split('-');
+            const releaseDateTime = new Date(
+              parseInt(releaseDateParts[0]),
+              parseInt(releaseDateParts[1]) - 1,
+              parseInt(releaseDateParts[2]) + 1
+            );
+            const releaseDateTime1 = releaseDateTime.toISOString().split('T')[0];
+            //console.log("releaseDateTime1:",releaseDateTime1);
+
+            const today = new Date();
+            today.setDate(today.getDate() + 1);
+            const today1 = today.toISOString().split('T')[0];
+
+            // console.log("today1:",today1);
+
+            if (releaseDateTime1 <= today1 && movie.status !== 'RELEASED') {
+              // Update status to RELEASED
+
+              await axios.post(`${BASE_URL}/movies/updateStatus`, {
+                id: movie.id,
+                status: 'RELEASED'
+              }, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+              }).then((response) => {
+                // console.log("releaseDateTime:", releaseDateTime1);
+                // console.log("today:", today1);
+                // console.log("update status to RELEASED");
+              }).catch((error) => {
+                console.log(error);
+              })
+              return { ...movie, status: 'RELEASED' };
+            } else if (releaseDateTime1 > today1 && movie.status !== 'UPCOMING') {
+
+              // Update status to UPCOMING
+              await axios.post(`${BASE_URL}/movies/updateStatus`, {
+                id: movie.id,
+                status: 'UPCOMING'
+              }, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+              }).then((response) => {
+                // console.log("releaseDateTime:", releaseDateTime1);
+                // console.log("today:", today1);
+                // console.log("update status to UPCOMING");
+              }).catch((error) => {
+                console.log(error);
+              })
+              return { ...movie, status: 'UPCOMING' };
+            } else {
+              return { ...movie };
+            }
+          })
+        );
+
+        setMovies(updatedMovies);
       } catch (error) {
         console.log(error);
       }
-    })();
-  }, []);
+    };
+
+    updateMoviesStatus();
+  }, [token, movies1]);
+
   const handleAddMovie = () => {
+
     // Send a POST request to add the new movie
     (async () => {
       try {
@@ -105,7 +196,7 @@ export default function AdminMovie() {
     if (selectedMovie) {
       (async () => {
         try {
-          const responseData = await updateMovie(selectedMovie.id, editedMovieData);
+          const responseData = await updateMovie(selectedMovie.id, formData);
           //setMovies([...movies, responseData]);
           // Update the movies state with the edited movie data
           setMovies((prevMovies) => {
@@ -125,14 +216,14 @@ export default function AdminMovie() {
       })();
     }
   };
-  const handleDeleteMovie = ()=>{
-     // Send a DELETE request to delete the movie
-     if (selectedMovie) {
+  const handleDeleteMovie = () => {
+    // Send a DELETE request to delete the movie
+    if (selectedMovie) {
       (async () => {
         try {
           const responseData = await deleteMovie(selectedMovie.id);
           setMovies((prevMovies) => {
-            const updatedMovies = prevMovies.filter((movie)=>movie.id!==selectedMovie.id);
+            const updatedMovies = prevMovies.filter((movie) => movie.id !== selectedMovie.id);
             return updatedMovies;
           });
           setOpenDeleteDialog(false);
@@ -146,17 +237,11 @@ export default function AdminMovie() {
       })();
     }
   }
-  // Function to open the edit dialog
-  // const openEditDialogFunc = (movie: Movie) => {
-  //   setSelectedMovie(movie); // Set the selected movie for editing
-  //   setEditedMovieData(movie);
-  //   setOpenEditDialog(true); // Open the edit dialog
-  // };
 
   // Function to open the edit dialog
   const handleEditForMovie = (movie: Movie) => {
     setSelectedMovie(movie);
-    setEditedMovieData(movie);
+    setFormData(movie);
     setOpenEditDialog(true); // Open the edit dialog
   };
   const handleDeleteForMovie = (movie: Movie) => {
@@ -164,7 +249,7 @@ export default function AdminMovie() {
     //setEditedMovieData(movie);
     setOpenDeleteDialog(true); // Open the edit dialog
   };
-  
+
   const handleAddForMovie = () => {
     setFormData({
       title: '',
@@ -177,21 +262,6 @@ export default function AdminMovie() {
     });
     setOpenAddDialog(true);
   }
-  // const handleDeleteMovie = () => {
-  //   // Send a DELETE request to delete the selected movie
-  //   axios.delete(`/api/movies/${selectedMovie.id}`)
-  //     .then(() => {
-  //       // Update the movie list
-  //       const updatedMovies = movies.filter((movie) =>
-  //         movie.id !== selectedMovie.id
-  //       );
-  //       setMovies(updatedMovies);
-  //       setOpenEditDialog(false); // Close the confirmation dialog
-  //     })
-  //     .catch((error) => {
-  //       console.error('Error deleting movie:', error);
-  //     });
-  //};
   const handleAddSessionForMovie = (movie: Movie) => {
     setSelectedMovie(movie);
     navigate(`/Admin/Sessions?movie=${movie.id}`, { state: { movie: movie } });
@@ -202,42 +272,66 @@ export default function AdminMovie() {
     }
     return text.slice(0, maxLength) + "...";
   };
+  const handleReleaseDateChange = (releaseDate: string) => {
+    // const releaseDateParts = releaseDate.split('-');
+    // const releaseDateTime = new Date(
+    //   parseInt(releaseDateParts[0]),
+    //   parseInt(releaseDateParts[1]) - 1,
+    //   parseInt(releaseDateParts[2]) + 1
+    // );
+    // const releaseDateTimes = releaseDateTime.toISOString().split('T')[0];
+    // const today = new Date();
+    // today.setDate(today.getDate() + 1);
+    // const today_new = today.toISOString().split('T')[0];
+    // console.log(today_new);
+    // Check if the release date is after today
+    if (releaseDate > today_new) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        status: 'UPCOMING',
+        releaseDate: releaseDate,
+      }));
+    } else {
+      // If the release date is on or before today, set the status to RELEASED
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        status: 'RELEASED', // or another appropriate status
+        releaseDate: releaseDate,
+      }));
+    }
+  };
+  const releaseDateCheck = (releaseDate: string) => {
+    const releaseDateParts = releaseDate.split('-');
+    const releaseDateTime = new Date(
+      parseInt(releaseDateParts[0]),
+      parseInt(releaseDateParts[1]) - 1,
+      parseInt(releaseDateParts[2]) + 1
+    );
+    const releaseDateTimes = releaseDateTime.toISOString().split('T')[0];
+
+    console.log("today_new", today_new);
+    if (releaseDateTimes <= today_new) {
+      console.log("false");
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   return (
     <div>
-      {/* <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" marginTop={4} marginLeft={2}>
         電影管理
       </Typography>
-      <Button variant="outlined" color="primary" onClick={() => handleAddForMovie()}>
-        Add Movie
-      </Button> */}
-      {/* <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-      <Typography variant="h6" gutterBottom style={{ display: 'flex', alignItems: 'center' }}>
-        電影管理
-        <Button variant="outlined" color="primary" onClick={() => handleAddForMovie()}>
-          新增電影
-        </Button>
-      </Typography>
-      </div> */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
-          {/* <TableRow> */}
-        {/* <TableCell  style={{ textAlign: 'center' }}>
-          <Typography variant="h6" gutterBottom style={{ textAlign: 'center' }}>
-            電影管理
-          </Typography>
-        </TableCell> */}
-        <TableCell colSpan={7} style={{ textAlign: 'left' }}>
-        <Button variant="outlined" color="primary" onClick={() => handleAddForMovie()}
-           >
-          新增電影
-        </Button>
-        </TableCell>
-      {/* </TableRow> */}
-          {/* <Typography variant="h6" gutterBottom style={{ display: 'flex', alignItems: 'center' }}>
-        電影管理
-      </Typography> */}
-      
+            <TableCell colSpan={7} style={{ textAlign: 'left' }} >
+              <Button style={{ marginTop: '0px' }} variant="outlined" color="primary" onClick={() => handleAddForMovie()}
+              >
+                新增電影
+              </Button>
+            </TableCell>
           </TableHead>
           <TableBody>
             <TableRow >
@@ -270,7 +364,7 @@ export default function AdminMovie() {
                   {movie.releaseDate}
                 </TableCell>
                 <TableCell>
-                  {movie.status}
+                  {movie.status==='RELEASED'?'熱映中':movie.status==='UPCOMING'?'即將上映':'已下檔'}
                 </TableCell>
                 <TableCell>
                   {movie.genre}
@@ -283,6 +377,7 @@ export default function AdminMovie() {
                   <Button variant="outlined"
                     color="primary"
                     onClick={() => handleEditForMovie(movie)}
+                    disabled={!releaseDateCheck(movie.releaseDate)}
                   >
                     修改電影
                   </Button>
@@ -305,7 +400,6 @@ export default function AdminMovie() {
           </TableBody>
         </Table>
       </TableContainer>
-
       {/* Add Movie Dialog */}
       <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)}>
         <DialogTitle>新增電影</DialogTitle>
@@ -313,6 +407,7 @@ export default function AdminMovie() {
           {/* Add Movie Form */}
           <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
             <TextField
+              sx={{ marginTop: "13px" }}
               label="電影名稱"
               fullWidth
               required
@@ -320,6 +415,7 @@ export default function AdminMovie() {
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             />
             <TextField
+              sx={{ marginTop: "13px" }}
               label="電影介紹"
               fullWidth
               required
@@ -327,18 +423,26 @@ export default function AdminMovie() {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
             <FormControl fullWidth>
-              <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>上映日期</Typography>
+              <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', marginTop: '10px', color: 'gray' }}>上映日期</Typography>
               <TextField
                 //label="ReleaseDate"
                 id="releaseDate"
                 fullWidth
                 required
                 value={formData.releaseDate}
-                onChange={(e) => setFormData({ ...formData, releaseDate: e.target.value })}
+                onChange={(e) => {
+                  setFormData((prevFormData) => ({
+                    ...prevFormData,
+                    releaseDate: e.target.value,
+                  }));
+                  handleReleaseDateChange(e.target.value);
+                }}
+                // onChange={(e) => 
+                //   setFormData({ ...formData, releaseDate: e.target.value })}
                 type="date" // Set the input type to "date"
                 InputProps={{
                   inputProps: {
-                    min: '1000-01-01', // Minimum date allowed (adjust as needed)
+                    min: today_new, // Minimum date allowed (adjust as needed)
                     max: '9999-12-31', // Maximum date allowed (adjust as needed)
                   },
                 }}
@@ -346,25 +450,25 @@ export default function AdminMovie() {
                 placeholder="YYYY/MM/DD"
               />
             </FormControl>
-            <FormControl sx={{ m: 1, minWidth: 120 }}>
+            <FormControl sx={{ m: 1, minWidth: 120, marginTop: '10px', marginLeft: '-1px', }}>
               <InputLabel id="statusLabel">上映狀態</InputLabel>
               <Select
                 labelId="statusLabel"
                 id="status"
                 name="status"
-                sx={{ width: 110 }}
+                sx={{ width: 150 }}
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 size="small"
                 style={{ marginBottom: '0px' }}
               >
                 <MenuItem value="">All</MenuItem>
-                <MenuItem value="RELEASED">RELEASED</MenuItem>
-                <MenuItem value="UPCOMING">UPCOMING</MenuItem>
-                <MenuItem value="ARCHIEVED">ARCHIEVED</MenuItem>
+                <MenuItem value="RELEASED">熱映中</MenuItem>
+                <MenuItem value="UPCOMING">即將上映</MenuItem>
+                {/* <MenuItem value="ARCHIEVED">已下檔</MenuItem> */}
               </Select>
             </FormControl>
-            <FormControl sx={{ m: 1, minWidth: 120 }}>
+            <FormControl sx={{ m: 1, minWidth: 120, marginTop: '10px' }}>
               <InputLabel id="genreLabel">類型</InputLabel>
               <Select
                 labelId="genreLabel"
@@ -383,7 +487,7 @@ export default function AdminMovie() {
                 }
               </Select>
             </FormControl>
-            <FormControl sx={{ m: 1, minWidth: 120 }}>
+            <FormControl sx={{ m: 1, minWidth: 120, marginTop: '10px' }}>
               <InputLabel id="levelLabel">級別</InputLabel>
               <Select
                 labelId="levelLabel"
@@ -421,50 +525,63 @@ export default function AdminMovie() {
       </Dialog>
       {/* Edit Movie Dialog */}
       <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} fullWidth maxWidth="md">
-        <DialogTitle>Edit Movie</DialogTitle>
+        <DialogTitle>修改電影資訊</DialogTitle>
         <DialogContent>
           <TextField
-            label="Title"
+            sx={{ margin: '10px 0' }}
+            label="片名"
             fullWidth
             required
-            value={editedMovieData.title}
-            onChange={(e) => setEditedMovieData({ ...editedMovieData, title: e.target.value })}
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          //disabled={!releaseDateCheck()}
           />
           <TextField
-            label="Description"
+            sx={{ margin: '10px 0' }}
+            label="介紹"
             fullWidth
             required
-            value={editedMovieData.description}
-            onChange={(e) => setEditedMovieData({ ...editedMovieData, description: e.target.value })}
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
           <FormControl fullWidth>
-            <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>上映日期</Typography>
+            <Typography variant="body2" style={{ marginLeft: '10px', color: 'gray' }}>上映日期</Typography>
             <TextField
               //label="ReleaseDate"
+              sx={{ margin: '10px 0' }}
               id="releaseDate"
               fullWidth
               required
-              value={editedMovieData.releaseDate}
-              onChange={(e) => setEditedMovieData({ ...editedMovieData, releaseDate: e.target.value })}
+              value={formData.releaseDate}
+              onChange={(e) => {
+                setFormData((prevFormData) => ({
+                  ...prevFormData,
+                  releaseDate: e.target.value,
+                }));
+                handleReleaseDateChange(e.target.value);
+              }}
+              // onChange={(e) => setEditedMovieData({ ...editedMovieData, releaseDate: e.target.value })}
               type="date" // Set the input type to "date"
               InputProps={{
                 inputProps: {
-                  min: '1000-01-01', // Minimum date allowed (adjust as needed)
-                  max: '9999-12-31', // Maximum date allowed (adjust as needed)
+                  min: today_new, // Set the minimum date to today
+                  max: '9999-12-31', // Maximum date allowed 
                 },
               }}
+              //disabled={!releaseDateCheck()}
               // Add a placeholder as a hint for the desired format
               placeholder="YYYY/MM/DD"
             />
           </FormControl>
-          <FormControl sx={{ m: 1, minWidth: 120 }}>
-            <InputLabel id="levelLabel">級別</InputLabel>
+          <FormControl sx={{ mt: 1, mr: 2, minWidth: 120 }}>
+            <InputLabel id="levelLabel" >級別</InputLabel>
             <Select
+              sx={{ margin: '10px 0' }}
               labelId="levelLabel"
               id="level"
               name="level"
-              value={editedMovieData.level}
-              onChange={(e) => setEditedMovieData({ ...editedMovieData, level: e.target.value })}
+              value={formData.level}
+              onChange={(e) => setFormData({ ...formData, level: e.target.value })}
               size="small"
               style={{ marginLeft: '0px' }}
             >
@@ -475,14 +592,15 @@ export default function AdminMovie() {
               }
             </Select>
           </FormControl>
-          <FormControl sx={{ m: 1, minWidth: 120 }}>
+          <FormControl sx={{ mt: 1, mr: 2, minWidth: 120 }}>
             <InputLabel id="genreLabel">類型</InputLabel>
             <Select
+              sx={{ margin: '10px 0' }}
               labelId="genreLabel"
               id="genre"
               name="genre"
-              value={editedMovieData.genre}
-              onChange={(e) => setEditedMovieData({ ...editedMovieData, genre: e.target.value })}
+              value={formData.genre}
+              onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
               size="small"
               style={{ marginLeft: '0px' }}
             >
@@ -493,15 +611,17 @@ export default function AdminMovie() {
               }
             </Select>
           </FormControl>
-          <FormControl sx={{ m: 1, minWidth: 120 }}>
+          <FormControl sx={{ mt: 1, mr: 2, minWidth: 120 }}>
             <InputLabel id="statusLabel">上映狀態</InputLabel>
             <Select
+              sx={{ margin: '10px 0' }}
               labelId="statusLabel"
               id="status"
               name="status"
-              value={editedMovieData.status}
-              onChange={(e) => setEditedMovieData({ ...editedMovieData, status: e.target.value })}
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               size="small"
+            //disabled={!releaseDateCheck()}
             //style={{ marginBottom: '0px' }}
             >
               <MenuItem value="">All</MenuItem>
@@ -511,11 +631,12 @@ export default function AdminMovie() {
             </Select>
           </FormControl>
           <TextField
-            label="CoverUrl"
+            sx={{ marginTop: '10px' }}
+            label="封面"
             fullWidth
             required
-            value={editedMovieData.coverUrl}
-            onChange={(e) => setEditedMovieData({ ...editedMovieData, coverUrl: e.target.value })}
+            value={formData.coverUrl}
+            onChange={(e) => setFormData({ ...formData, coverUrl: e.target.value })}
           />
           {/* Add more form fields here */}
         </DialogContent>
@@ -526,8 +647,8 @@ export default function AdminMovie() {
           </Button>
         </DialogActions>
       </Dialog>
-       {/* Delete Movie Dialog */}
-       <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)} fullWidth maxWidth="sm">
+      {/* Delete Movie Dialog */}
+      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)} fullWidth maxWidth="sm">
         <DialogTitle>Delete Movie</DialogTitle>
         <DialogContent>
           確定要刪除電影 "{selectedMovie?.title}" 嗎?

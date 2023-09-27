@@ -10,25 +10,6 @@ import { log } from "console";
 import { FormEvent, useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 
-// interface Seat {
-//   id: number;
-//   seatNumber: string;
-//   isAvailable: number;
-// }
-// interface CustomerOrder {
-//   id: number;
-//   price: number;
-//   orderDate: string;
-//   quantity: number;
-//   payment: string;
-// }
-// interface Session {
-//   id: number;
-//   startTime: string;
-//   endTime: string;
-//   sessionDate: string;
-//   //orders: CustomerOrder[];
-// }
 interface Movie {
   id: number;
   title: string;
@@ -44,15 +25,20 @@ interface Movie {
 }
 
 const api = 'http://localhost:8080';
-
+// const customFontStyle = {
+//   // fontFamily: 'Raleway, sans-serif',
+//   color:'blue'
+//   // Other CSS properties can also be added here
+// };
 export default function MovieDetail() {
+  
   const location = useLocation();
   const movie_id = new URLSearchParams(location.search).get("id");
   const user_id = parseInt(sessionStorage.getItem('user_id') || '');
   // const { movie_id } = useParams();
-  console.log("movie_id:", movie_id);
-  console.log("user_id:", user_id);
-
+  // console.log("movie_id:", movie_id);
+  // console.log("user_id:", user_id);
+  
   const [movie, setMovie] = useState<Movie>();
   useEffect(() => {
     if (movie_id) {
@@ -89,23 +75,39 @@ export default function MovieDetail() {
               }}
             />
           </Box>
-          <Box flex="1.5" marginRight={4}>
-            <Typography variant="h5" component="h1" >
-              {movie.title}
+          <Box flex="1" >
+            <Typography variant="h5" component="h1">
+            {movie.title}
             </Typography>
-            <Typography variant="body2" color="textSecondary">
-              上映日期: {movie.releaseDate}
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              類型: {movie.genre}
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
+            <Box
+              style={{
+                display: 'inline-block',
+                backgroundColor: `${movie.level==='普遍級'?'green':movie.level==='保護級'?'blue':movie.level==='輔導級'?'orange':'red'}`,
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                margin:'15px 0'
+              }}
+            >
               {movie.level}
+            </Box>
+            <Typography variant="body1" sx={{color:"royalblue"}}>
+            <b>上映日期</b>
             </Typography>
+            <Typography variant="body1" marginBottom={2}>
+              {movie.releaseDate}
+            </Typography>
+            <Typography variant="body1"  sx={{color:"royalblue"}}>
+            <b> 類型</b>
+            </Typography>
+            <Typography variant="body1" >
+              {movie.genre}
+            </Typography>
+          
           </Box>
           <Box flex="2.5"> 
-            <Typography variant="h5" component="h2">
-              電影介紹
+            <Typography variant="h5" component="h2" marginBottom={3} sx={{color:"royalblue"}}>
+            <b>  劇情簡介 </b>
             </Typography>
             <Typography variant="body1" color="textPrimary">
               {movie.description}

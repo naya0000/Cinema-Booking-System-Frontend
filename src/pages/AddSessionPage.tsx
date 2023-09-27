@@ -21,6 +21,9 @@ interface Session {
   sessionDate: string;
   movieId: number;
 }
+const SEAT_ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+// const SEAT_NUMBERS = Array.from({ length: 12 }, (_, i) => `${9 + i}`); //9~20
+const SEAT_NUMBERS = [9, 20] //9~20
 const BASE_URL = 'http://localhost:8080';
 const token = sessionStorage.getItem('token');
 export default function AddSessionPage() {
@@ -33,6 +36,7 @@ export default function AddSessionPage() {
   const [openEditSessionDialog, setOpenEditSessionDialog] = useState(false);
   const [openDeleteSessionDialog, setOpenDeleteSessionDialog] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session>();
+  const [isSessionEditable, setIsSessionEditable] = useState(true);
   const [editSession, setEditSession] = useState({
     startTime: '',
     endTime: '',
@@ -46,7 +50,11 @@ export default function AddSessionPage() {
     sessionDate: '',
     movieId: parseInt(movieId || ''), // Parse movieId as a number
   });
-  console.log("movie:", movie)
+  // console.log("movie:", movie);
+
+  const today = new Date();
+  today.setDate(today.getDate() + 1);
+  const today_new = today.toISOString().split('T')[0];
   useEffect(() => {
     (async () => {
       try {
@@ -69,6 +77,41 @@ export default function AddSessionPage() {
       }
     ).then((response) => {
       if (response.status === 201) {
+        // Create seats for the new session
+        const newSession = response.data;
+        console.log(newSession);
+        const newSeats = SEAT_ROWS.flatMap(row =>
+        ({
+          row: row,
+          seatNumber: [SEAT_NUMBERS[0], SEAT_NUMBERS[1]],
+          isAvailable: 1,
+          movieId: newSession.movieId,
+          sessionId: newSession.id,
+        }))
+
+        console.log(newSeats);
+        newSeats.forEach((seats) => {
+          axios.post(
+            `${BASE_URL}/seats`,
+            seats,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          )
+            .then((response) => {
+              if (response.status === 201) {
+      
+              }
+            })
+            .catch((error) => {
+              if (error.response.status === 400) {
+                alert(error.response.data);
+              }
+            })
+        })
+
         alert(`新增場次成功\n 電影: ${movie.title}\n日期: ${formSession.sessionDate}\n開始時間: ${formSession.startTime} 結束時間: ${formSession.endTime} `);
         setSessions([...sessions, response.data]);
         setOpenAddSessionDialog(false);
@@ -142,6 +185,7 @@ export default function AddSessionPage() {
     setOpenEditSessionDialog(true);
     setSelectedSession(session);
     setEditSession(session);
+    // checkSessionEditable(session);
   };
   const handleDeleteSessionForMovie = (session: Session) => {
     setOpenDeleteSessionDialog(true);
@@ -150,13 +194,31 @@ export default function AddSessionPage() {
   const handleAddSeatForMovie = (movie: Movie, session: Session) => {
     navigate(`/Admin/Seats?movie=${movieId}&session=${session.id}`, { state: { movieObject: movie, sessionObject: session } })
   }
+  const sessionEditable = (sessionDate:string) => {
+    const sessionDateParts = sessionDate.split('-');
+    const sessionDateTime = new Date(
+      parseInt(sessionDateParts[0]),
+      parseInt(sessionDateParts[1]) - 1,
+      parseInt(sessionDateParts[2]) + 1
+    );
+    const sessionDateTimes = sessionDateTime.toISOString().split('T')[0];
+    
+    console.log("sessionDateTimes", sessionDateTimes);
+    console.log("today_new", today_new);
+    if (sessionDateTimes <= today_new) {
+      console.log("false");
+      return false;
+    } else {
+      return true;
+    }
+  }
   const textField = formSession.startTime && formSession.endTime && formSession.sessionDate;
   const sessionEditField = editSession.startTime && editSession.endTime && editSession.sessionDate;
   //const sessionDeleteField = selectedSession.startTime && selectedSession.endTime && selectedSession.sessionDate;
   return (
     <div>
       {/* Render your form for adding sessions here */}
-      <h2>{movie.title}</h2>
+      <Typography marginTop={4} variant="h5">{movie.title}</Typography>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -196,6 +258,7 @@ export default function AddSessionPage() {
                       variant="contained"
                       color="secondary"
                       onClick={() => handleEditSessionForMovie(session)}
+                      disabled={!sessionEditable(session.sessionDate)}
                     >
                       修改時間
                     </Button>
@@ -210,6 +273,7 @@ export default function AddSessionPage() {
                       //size="small"
                       color="secondary"
                       onClick={() => handleAddSeatForMovie(movie, session)}
+                      //disabled={!sessionEditable(session.sessionDate)}
                     >
                       修改座位
                     </Button>
@@ -224,42 +288,53 @@ export default function AddSessionPage() {
       <Dialog open={openEditSessionDialog} onClose={() => setOpenEditSessionDialog(false)}>
         <DialogTitle>修改電影時間:</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>播放日期</Typography>
-          <TextField
-            //label="播放日期"
-            fullWidth
-            required
-            type="date"
-            value={editSession.sessionDate}
-            onChange={(e) => setEditSession({ ...editSession, sessionDate: e.target.value })}
-          />
-          <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>開始時間</Typography>
-          <TextField
-            //label="開始時間"
-            fullWidth
-            required
-            type="time"
-            value={editSession.startTime}
-            onChange={(e) => setEditSession({ ...editSession, startTime: e.target.value })}
-          />
-          <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>結束時間</Typography>
-          <TextField
-            //label="結束時間"
-            fullWidth
-            required
-            type="time"
-            value={editSession?.endTime}
-            onChange={(e) => setEditSession({ ...editSession, endTime: e.target.value })}
-          />
-
+          {!isSessionEditable ? "場次已過期，無法修改時間。" :
+            <div>
+              <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>播放日期</Typography>
+              <TextField
+                //label="播放日期"
+                fullWidth
+                required
+                type="date"
+                value={editSession.sessionDate}
+                onChange={(e) => setEditSession({ ...editSession, sessionDate: e.target.value })}
+              />
+              <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>開始時間</Typography>
+              <TextField
+                //label="開始時間"
+                fullWidth
+                required
+                type="time"
+                value={editSession.startTime}
+                onChange={(e) => setEditSession({ ...editSession, startTime: e.target.value })}
+              />
+              <Typography variant="body2" style={{ fontSize: '15px', marginLeft: '10px', color: 'gray' }}>結束時間</Typography>
+              <TextField
+                //label="結束時間"
+                fullWidth
+                required
+                type="time"
+                value={editSession?.endTime}
+                onChange={(e) => setEditSession({ ...editSession, endTime: e.target.value })}
+              />
+            </div>
+          }
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenEditSessionDialog(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleEditSession} color="primary" disabled={!sessionEditField}>
-            Confirm
-          </Button>
+         
+          {!isSessionEditable ?
+            <Button onClick={() => setOpenEditSessionDialog(false)}>
+             OK
+            </Button> :
+            <div>
+             <Button onClick={() => setOpenEditSessionDialog(false)}>
+             Cancel
+           </Button>
+            <Button onClick={handleEditSession} color="primary" disabled={!sessionEditField}>
+              CONFIRM
+            </Button>
+            </div>
+          }
         </DialogActions>
       </Dialog>
       <Dialog open={openDeleteSessionDialog} onClose={() => setOpenDeleteSessionDialog(false)}>
@@ -288,6 +363,12 @@ export default function AddSessionPage() {
             fullWidth
             required
             type="date"
+            InputProps={{
+              inputProps: {
+                min: today_new, // Set the minimum date to today
+                max: '9999-12-31', // Maximum date allowed 
+              },
+            }}
             value={formSession.sessionDate}
             onChange={(e) => setFormSession({ ...formSession, sessionDate: e.target.value })}
           />
