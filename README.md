@@ -1,6 +1,6 @@
 # Cinema Booking System (Frontend)
 
-The Cinema Booking System is a JAVA /MySQL-based seat and ticket reservation system allowing bookings in a few easy steps.  
+The Cinema Booking System is a React/ Java/ MySQL-based seat and ticket reservation system allowing bookings in a few easy steps.  
 
 It allows users to browse movies, book tickets, and manage their reservations. 
 
@@ -18,20 +18,20 @@ This frontend repository contains the client-side code for the application.
 ## Features
 
 ### User :
-- Browse a list of movies, view movie details and search for a movie.
-- User registration and login.
-- Book movie tickets and view booking history.
+- Browse movies, view movie details and search for a movie.
+- User signup and login. (Using JWT token and Spring Security)
+- Book movie tickets and view reservations.
 - Cancel orders.
 - Reset Password.
 
 ### Admin :
 - #### Movie management :
   - Add movies with specific sessions and seats.
-  - Edit Movies
-  - Delete Movies
+  - Edit Movies.
+  - Delete Movies.
 - #### Order management :
   - Filter all the orders with movie title, order date, user Id, total price, etc.
-  - Update Order Status such as cancel, confirm or complete the order.
+  - Cancel, confirm or complete the order.
 - #### User management :
   - Block user accounts.
   - Edit users information such as password, username and phone number.
@@ -42,7 +42,8 @@ This frontend repository contains the client-side code for the application.
 Before you begin, ensure you have met the following requirements:
 
 - Node.js and npm installed on your machine.
-- A backend server for the Cinema Booking System (API).
+- A backend server for the Cinema Booking System (API). (Please refer to `https://github.com/naya0000/Cinema-Booking-System-Backend`)
+- A movie_project.sql file connected to the server.
 
 ## Getting Started with Create React App
 
@@ -51,10 +52,10 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/naya0000/MovieTheater__Frontend.git
+   git clone https://github.com/naya0000/Cinema-Booking-System-Frontend.git
 2. Navigate to the project directory:
    ```bash
-   cd MovieTheater__Frontend
+   cd Cinema-Booking-System-Frontend
 3. Install the project dependencies:
    ```bash
    npm install
