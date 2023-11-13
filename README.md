@@ -45,7 +45,7 @@ Before you begin, ensure you have met the following requirements:
 - A backend server for the Cinema Booking System (API). (Please refer to `https://github.com/naya0000/Cinema-Booking-System-Backend`)
 - A movie_project.sql file connected to the server.
 
-## Getting Started with Create React App
+## Getting Started
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
